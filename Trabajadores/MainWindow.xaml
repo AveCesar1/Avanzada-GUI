@@ -1,0 +1,128 @@
+<Window x:Class="MyWpfApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Registro de Empleados" Height="450" Width="800" WindowState="Maximized">
+
+    <Window.Resources>
+        <!-- Colores básicos -->
+        <SolidColorBrush x:Key="AccentBrush">#2D7FF6</SolidColorBrush>
+        <SolidColorBrush x:Key="SurfaceBrush">#F6F8FA</SolidColorBrush>
+        <SolidColorBrush x:Key="TextBrush">#1B1B1F</SolidColorBrush>
+
+        <!-- Estilo de botones simplificado -->
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="6"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="MinWidth" Value="120"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="12,4"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SecondaryButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#E3E7EB"/>
+        </Style>
+
+        <!-- Estilo de TextBox simplificado -->
+        <Style x:Key="InputBox" TargetType="TextBox">
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="Margin" Value="6"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#E3E7EB"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Height" Value="44"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Estilo para DataGrid más espacioso y moderno -->
+        <Style x:Key="CleanDataGrid" TargetType="DataGrid">
+            <Setter Property="RowHeight" Value="48"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="AlternatingRowBackground" Value="#F8FAFC"/>
+            <Setter Property="GridLinesVisibility" Value="None"/>
+            <Setter Property="CanUserResizeRows" Value="False"/>
+            <Setter Property="SelectionMode" Value="Single"/>
+            <Setter Property="SelectionUnit" Value="FullRow"/>
+            <Setter Property="HorizontalScrollBarVisibility" Value="Auto"/>
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#FBFDFF"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Height" Value="48"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="12,0"/>
+        </Style>
+
+        <Style TargetType="DataGridRow">
+            <Setter Property="Background" Value="Transparent"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+    </Window.Resources>
+
+    <Grid Background="{StaticResource SurfaceBrush}" Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Labels -->
+        <Label Content="Nombre:" Grid.Row="0" Grid.Column="0" Margin="8" VerticalAlignment="Center" FontSize="16" Foreground="{StaticResource TextBrush}"/>
+        <Label Content="Puesto:" Grid.Row="1" Grid.Column="0" Margin="8" VerticalAlignment="Center" FontSize="16" Foreground="{StaticResource TextBrush}"/>
+        <Label Content="Departamento:" Grid.Row="2" Grid.Column="0" Margin="8" VerticalAlignment="Center" FontSize="16" Foreground="{StaticResource TextBrush}"/>
+
+        <!-- TextBoxes -->
+        <TextBox x:Name="txtNombre" Grid.Row="0" Grid.Column="1" Style="{StaticResource InputBox}" HorizontalAlignment="Left" Width="520"/>
+        <TextBox x:Name="txtPuesto" Grid.Row="1" Grid.Column="1" Style="{StaticResource InputBox}" HorizontalAlignment="Left" Width="520"/>
+        <TextBox x:Name="txtDepartamento" Grid.Row="2" Grid.Column="1" Style="{StaticResource InputBox}" HorizontalAlignment="Left" Width="520"/>
+
+        <!-- Botones de acción -->
+        <StackPanel Grid.Row="0" Grid.Column="2" Grid.RowSpan="3" Orientation="Vertical" Margin="10,0,0,0">
+            <Button x:Name="btnAgregar" Content="Agregar" Click="BtnAgregar_Click" Style="{StaticResource PrimaryButton}"/>
+            <Button x:Name="btnLimpiar" Content="Limpiar" Click="BtnLimpiar_Click" Style="{StaticResource SecondaryButton}"/>
+            <Button x:Name="btnEliminar" Content="Eliminar" Click="BtnEliminar_Click" Style="{StaticResource SecondaryButton}"/>
+        </StackPanel>
+
+        <!-- Botones de navegación -->
+        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,20">
+            <Button x:Name="btnRegresar" Content="Regresar" Click="BtnRegresar_Click" Style="{StaticResource SecondaryButton}"/>
+            <Button x:Name="btnAdelantar" Content="Adelantar" Click="BtnAdelantar_Click" Style="{StaticResource SecondaryButton}"/>
+        </StackPanel>
+
+        <!-- DataGrid -->
+        <Border Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Background="{StaticResource SurfaceBrush}" CornerRadius="8" Padding="12" Margin="0,20,0,0" BorderBrush="#E3E7EB" BorderThickness="1">
+            <DataGrid x:Name="dgEmpleados" AutoGenerateColumns="True" SelectionChanged="DgEmpleados_SelectionChanged" 
+                      CanUserAddRows="False" IsReadOnly="True" Style="{StaticResource CleanDataGrid}" ColumnWidth="*" VerticalAlignment="Stretch"/>
+        </Border>
+    </Grid>
+</Window>
