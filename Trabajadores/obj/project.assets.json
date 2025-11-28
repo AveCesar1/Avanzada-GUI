@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "Z:\\home\\lausdeo\\Documents\\Otros\\Documentos\\Escuela\\Preparatoria\\Septimo Semestre\\PA\\GUI\\MyWpfApp.csproj",
+      "projectUniqueName": "Z:\\home\\lausdeo\\Documents\\Otros\\Documentos\\Escuela\\Preparatoria\\Septimo Semestre\\PA\\Avanzada-GUI\\Trabajadores\\MyWpfApp.csproj",
       "projectName": "MyWpfApp",
-      "projectPath": "Z:\\home\\lausdeo\\Documents\\Otros\\Documentos\\Escuela\\Preparatoria\\Septimo Semestre\\PA\\GUI\\MyWpfApp.csproj",
+      "projectPath": "Z:\\home\\lausdeo\\Documents\\Otros\\Documentos\\Escuela\\Preparatoria\\Septimo Semestre\\PA\\Avanzada-GUI\\Trabajadores\\MyWpfApp.csproj",
       "packagesPath": "C:\\users\\lausdeo\\.nuget\\packages\\",
-      "outputPath": "Z:\\home\\lausdeo\\Documents\\Otros\\Documentos\\Escuela\\Preparatoria\\Septimo Semestre\\PA\\GUI\\obj\\",
+      "outputPath": "Z:\\home\\lausdeo\\Documents\\Otros\\Documentos\\Escuela\\Preparatoria\\Septimo Semestre\\PA\\Avanzada-GUI\\Trabajadores\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\users\\lausdeo\\AppData\\Roaming\\NuGet\\NuGet.Config"

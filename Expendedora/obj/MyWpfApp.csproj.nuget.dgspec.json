@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "Z:\\home\\lausdeo\\Desktop\\GUI\\Expendedora\\MyWpfApp.csproj": {}
+    "Z:\\home\\lausdeo\\Documents\\Otros\\Documentos\\Escuela\\Preparatoria\\Septimo Semestre\\PA\\Avanzada-GUI\\Expendedora\\MyWpfApp.csproj": {}
   },
   "projects": {
-    "Z:\\home\\lausdeo\\Desktop\\GUI\\Expendedora\\MyWpfApp.csproj": {
+    "Z:\\home\\lausdeo\\Documents\\Otros\\Documentos\\Escuela\\Preparatoria\\Septimo Semestre\\PA\\Avanzada-GUI\\Expendedora\\MyWpfApp.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "Z:\\home\\lausdeo\\Desktop\\GUI\\Expendedora\\MyWpfApp.csproj",
+        "projectUniqueName": "Z:\\home\\lausdeo\\Documents\\Otros\\Documentos\\Escuela\\Preparatoria\\Septimo Semestre\\PA\\Avanzada-GUI\\Expendedora\\MyWpfApp.csproj",
         "projectName": "MyWpfApp",
-        "projectPath": "Z:\\home\\lausdeo\\Desktop\\GUI\\Expendedora\\MyWpfApp.csproj",
+        "projectPath": "Z:\\home\\lausdeo\\Documents\\Otros\\Documentos\\Escuela\\Preparatoria\\Septimo Semestre\\PA\\Avanzada-GUI\\Expendedora\\MyWpfApp.csproj",
         "packagesPath": "C:\\users\\lausdeo\\.nuget\\packages\\",
-        "outputPath": "Z:\\home\\lausdeo\\Desktop\\GUI\\Expendedora\\obj\\",
+        "outputPath": "Z:\\home\\lausdeo\\Documents\\Otros\\Documentos\\Escuela\\Preparatoria\\Septimo Semestre\\PA\\Avanzada-GUI\\Expendedora\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\users\\lausdeo\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -67,7 +67,7 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.416/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.415/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

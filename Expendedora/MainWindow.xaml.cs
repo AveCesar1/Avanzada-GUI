@@ -274,10 +274,12 @@ namespace MyWpfApp
                 
                 if (count == 0)
                 {
+                    // 9 productos en lugar de 6
                     var productos = new[]
                     {
                         ("Refresco", 15.50m), ("Galletas", 10.00m), ("Papas", 12.00m),
-                        ("Chocolate", 8.00m), ("Jugo", 18.00m), ("Agua", 10.00m)
+                        ("Chocolate", 8.00m), ("Jugo", 18.00m), ("Agua", 10.00m),
+                        ("Sandwich", 25.00m), ("Café", 14.00m), ("Pastelito", 22.00m) // 3 productos nuevos
                     };
 
                     foreach (var (nombre, precio) in productos)
@@ -502,6 +504,74 @@ namespace MyWpfApp
                 command.CommandText = "UPDATE Dinero SET Cantidad = 10";
                 command.ExecuteNonQuery();
             }
+        }
+
+        public (bool exitoso, string mensaje, int cantidadRecargada) RecargarDenominacionIndividual(decimal denominacion, int cantidadDeseada)
+        {
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        var command = connection.CreateCommand();
+                        
+                        // Obtener cantidad actual
+                        command.CommandText = "SELECT Cantidad FROM Dinero WHERE Denominacion = @denom";
+                        command.Parameters.AddWithValue("@denom", denominacion);
+                        var cantidadActual = Convert.ToInt32(command.ExecuteScalar());
+                        
+                        // Calcular cuántos podemos agregar (máximo 10 en total)
+                        int espacioDisponible = 10 - cantidadActual;
+                        int cantidadAAgregar = Math.Min(cantidadDeseada, espacioDisponible);
+                        
+                        if (cantidadAAgregar <= 0)
+                        {
+                            return (false, $"Ya hay {cantidadActual} unidades de ${denominacion}. No se puede agregar más.", 0);
+                        }
+                        
+                        // Actualizar la cantidad
+                        command.CommandText = "UPDATE Dinero SET Cantidad = Cantidad + @cantidad WHERE Denominacion = @denom";
+                        command.Parameters.AddWithValue("@cantidad", cantidadAAgregar);
+                        command.Parameters.AddWithValue("@denom", denominacion);
+                        command.ExecuteNonQuery();
+                        
+                        transaction.Commit();
+                        
+                        string mensaje = cantidadAAgregar == cantidadDeseada 
+                            ? $"✅ Recargados {cantidadAAgregar} de ${denominacion}"
+                            : $"✅ Recargados {cantidadAAgregar} de ${denominacion} (solo había espacio para {cantidadAAgregar} de {cantidadDeseada} solicitados)";
+                        
+                        return (true, mensaje, cantidadAAgregar);
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        return (false, $"Error: {ex.Message}", 0);
+                    }
+                }
+            }
+        }
+
+        public Dictionary<decimal, int> ObtenerEstadoDenominaciones()
+        {
+            var estado = new Dictionary<decimal, int>();
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText = "SELECT Denominacion, Cantidad FROM Dinero ORDER BY Denominacion";
+                
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        estado[reader.GetDecimal(0)] = reader.GetInt32(1);
+                    }
+                }
+            }
+            return estado;
         }
     }
 }
