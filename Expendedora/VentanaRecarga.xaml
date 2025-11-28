@@ -132,22 +132,22 @@
             </Grid.RowDefinitions>
 
             <!-- Header -->
-            <TextBlock Grid.Row="0" Text="⚡ Recargar Máquina" Style="{StaticResource HeaderText}" 
+            <TextBlock Grid.Row="0" Text="Recargar Máquina" Style="{StaticResource HeaderText}" 
                        HorizontalAlignment="Center" Margin="0,0,0,20"/>
             
             <!-- Recarga Rápida -->
             <Border Grid.Row="1" Style="{StaticResource CardStyle}" Margin="0,0,0,20">
                 <StackPanel>
-                    <TextBlock Text="🚀 Recarga Rápida" Style="{StaticResource SubheaderText}" 
+                    <TextBlock Text="Recarga Rápida" Style="{StaticResource SubheaderText}" 
                                Margin="0,0,0,15"/>
                     
-                    <Button x:Name="btnRecargarProductos" Content="📦 Recargar Productos (Stock a 10)" 
+                    <Button x:Name="btnRecargarProductos" Content="Recargar Productos (Stock a 10)" 
                             Click="BtnRecargarProductos_Click" Style="{StaticResource PrimaryButtonStyle}"/>
                     
-                    <Button x:Name="btnRecargarDinero" Content="💰 Recargar Todo el Dinero" 
+                    <Button x:Name="btnRecargarDinero" Content="Recargar Todo el Dinero" 
                             Click="BtnRecargarDinero_Click" Style="{StaticResource PrimaryButtonStyle}"/>
                     
-                    <Button x:Name="btnRecargarTodo" Content="🎯 Recargar Todo" 
+                    <Button x:Name="btnRecargarTodo" Content="Recargar Todo" 
                             Click="BtnRecargarTodo_Click" Style="{StaticResource LargeButtonStyle}" 
                             Margin="0,15,0,0"/>
                 </StackPanel>
@@ -156,7 +156,7 @@
             <!-- Recarga Individual -->
             <Border Grid.Row="2" Style="{StaticResource CardStyle}">
                 <StackPanel>
-                    <TextBlock Text="🎛️ Recarga Individual" Style="{StaticResource SubheaderText}" 
+                    <TextBlock Text="Recarga Individual" Style="{StaticResource SubheaderText}" 
                                Margin="0,0,0,15"/>
                     
                     <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto" 
@@ -204,7 +204,7 @@
             <!-- Mensajes -->
             <Border Grid.Row="3" Background="{StaticResource PrimaryColor}" Opacity="0.1" 
                     CornerRadius="8" Padding="15" Margin="0,15,0,0">
-                <TextBlock x:Name="txtMensaje" Text="👆 Selecciona una opción de recarga" 
+                <TextBlock x:Name="txtMensaje" Text="Selecciona una opción de recarga" 
                            Style="{StaticResource BodyText}" TextWrapping="Wrap" 
                            HorizontalAlignment="Center" FontWeight="SemiBold"/>
             </Border>

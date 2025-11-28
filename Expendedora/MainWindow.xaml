@@ -152,7 +152,7 @@
 
             <!-- Header -->
             <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,0,0,30">
-                <TextBlock Text="🚀 MÁQUINA EXPENDEDORA" Style="{StaticResource HeaderText}" 
+                <TextBlock Text="MÁQUINA EXPENDEDORA" Style="{StaticResource HeaderText}" 
                            HorizontalAlignment="Center" Margin="0,0,0,5"/>
                 <TextBlock Text="Selecciona tu producto favorito y realiza tu compra" 
                            Style="{StaticResource BodyText}" HorizontalAlignment="Center"/>
@@ -167,7 +167,7 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Text="🛍️ Productos Disponibles" Style="{StaticResource SubheaderText}" 
+                    <TextBlock Text="Productos Disponibles" Style="{StaticResource SubheaderText}" 
                                Margin="0,0,0,20"/>
 
                     <!-- Grid de productos 3x3 -->
@@ -188,7 +188,7 @@
 
                     <!-- Panel de Pago -->
                     <StackPanel Grid.Row="2" Margin="0,30,0,0">
-                        <TextBlock Text="💳 Método de Pago" Style="{StaticResource SubheaderText}" 
+                        <TextBlock Text="Método de Pago" Style="{StaticResource SubheaderText}" 
                                    Margin="0,0,0,15"/>
                         
                         <TextBlock Text="Selecciona las denominaciones:" Style="{StaticResource BodyText}" 
@@ -200,7 +200,7 @@
 
                         <Border Background="{StaticResource SurfaceColor}" CornerRadius="10" Padding="15">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <TextBlock Text="💰 Total ingresado: " Style="{StaticResource BodyText}" 
+                                <TextBlock Text="Total ingresado: " Style="{StaticResource BodyText}" 
                                            VerticalAlignment="Center" FontWeight="SemiBold"/>
                                 <TextBlock x:Name="txtTotalIngresado" Text="$0.00" FontSize="20" 
                                            FontWeight="Bold" VerticalAlignment="Center" Margin="10,0,0,0"
@@ -214,44 +214,44 @@
             <!-- Panel de Información -->
             <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource CardStyle}">
                 <StackPanel>
-                    <TextBlock Text="📋 Resumen de Compra" Style="{StaticResource SubheaderText}" 
+                    <TextBlock Text="Resumen de Compra" Style="{StaticResource SubheaderText}" 
                                Margin="0,0,0,20"/>
                     
                     <StackPanel Margin="0,0,0,20">
-                        <TextBlock x:Name="txtProductoSeleccionado" Text="📦 Producto: Ninguno seleccionado" 
+                        <TextBlock x:Name="txtProductoSeleccionado" Text="Producto: Ninguno seleccionado" 
                                    Style="{StaticResource BodyText}" Margin="0,0,0,8"/>
-                        <TextBlock x:Name="txtPrecioProducto" Text="🏷️ Precio: $0.00" 
+                        <TextBlock x:Name="txtPrecioProducto" Text="Precio: $0.00" 
                                    Style="{StaticResource BodyText}" Margin="0,0,0,8"/>
-                        <TextBlock x:Name="txtCambio" Text="🔄 Cambio: $0.00" 
+                        <TextBlock x:Name="txtCambio" Text="Cambio: $0.00" 
                                    Style="{StaticResource BodyText}" Margin="0,0,0,8"/>
                     </StackPanel>
                     
                     <!-- Mensaje de estado -->
                     <Border Background="#FFF0F0F0" CornerRadius="10" Padding="15" Margin="0,0,0,20">
-                        <TextBlock x:Name="txtMensaje" Text="👆 Selecciona un producto e ingresa el pago" 
+                        <TextBlock x:Name="txtMensaje" Text="Selecciona un producto e ingresa el pago" 
                                    Style="{StaticResource BodyText}" TextWrapping="Wrap" 
                                    Foreground="{StaticResource LightText}" TextAlignment="Center"/>
                     </Border>
 
                     <!-- Botones de acción -->
                     <StackPanel>
-                        <Button x:Name="btnComprar" Content="✅ Realizar Compra" 
+                        <Button x:Name="btnComprar" Content="Realizar Compra" 
                                 Click="BtnComprar_Click" Style="{StaticResource ActionButton}" 
                                 Margin="0,10,0,5"/>
-                        <Button x:Name="btnCancelar" Content="❌ Cancelar Compra" 
+                        <Button x:Name="btnCancelar" Content="Cancelar Compra" 
                                 Click="BtnCancelar_Click" Style="{StaticResource SecondaryButton}" 
                                 Margin="0,5,0,15"/>
                     </StackPanel>
 
                     <!-- Panel Administrador -->
                     <Separator Margin="0,20,0,20" Background="{StaticResource BorderColor}"/>
-                    <TextBlock Text="⚙️ Panel Administrador" Style="{StaticResource SubheaderText}" 
+                    <TextBlock Text="Panel Administrador" Style="{StaticResource SubheaderText}" 
                                Margin="0,0,0,15"/>
                     <StackPanel>
-                        <Button x:Name="btnRecargar" Content="🔄 Recargar Máquina" 
+                        <Button x:Name="btnRecargar" Content="Recargar Máquina" 
                                 Click="BtnRecargar_Click" Style="{StaticResource SecondaryButton}" 
                                 Margin="0,5"/>
-                        <Button x:Name="btnVerEstado" Content="📊 Ver Estado" 
+                        <Button x:Name="btnVerEstado" Content="Ver Estado" 
                                 Click="BtnVerEstado_Click" Style="{StaticResource SecondaryButton}" 
                                 Margin="0,5"/>
                     </StackPanel>
@@ -261,7 +261,7 @@
             <!-- Estado de la máquina -->
             <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource CardStyle}" 
                     Margin="0,20,0,0" Background="{StaticResource PrimaryGradient}" Opacity="0.1">
-                <TextBlock x:Name="txtEstado" Text="✅ Máquina lista para usar" 
+                <TextBlock x:Name="txtEstado" Text="Máquina lista para usar" 
                            Style="{StaticResource BodyText}" HorizontalAlignment="Center" 
                            FontWeight="SemiBold" Foreground="{StaticResource DarkText}"/>
             </Border>
