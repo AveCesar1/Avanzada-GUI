@@ -50,6 +50,9 @@ public class NowPlayingActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent == null || intent.getAction() == null) return;
+
+            Log.d("DEBUG_APP", "Broadcast recibido: " + intent.getAction());
+
             String action = intent.getAction();
             if (action.equals(MusicService.ACTION_TRACK_CHANGED)) {
                 // actualiza metadatos y seekbar
@@ -61,18 +64,27 @@ public class NowPlayingActivity extends AppCompatActivity {
         }
     };
 
-    private Runnable updateRunnable = new Runnable() {
+    // Busca esto al inicio de tu clase y reemplázalo:
+    private final Runnable updateRunnable = new Runnable() {
         @Override
         public void run() {
-            if (bound && musicService != null && musicService.isPlaying()) {
+            // Verificamos DIRECTAMENTE el servicio, sin variables 'bound' confusas
+            if (musicService != null && musicService.isPlaying()) {
                 long pos = musicService.getPosition();
                 long dur = musicService.getDuration();
+
+                // Actualizamos la UI
                 updateSeekUi(pos, dur);
             }
+
+            // Se vuelve a llamar a sí mismo cada 500ms (medio segundo)
+            // Lo ponemos FUERA del if para que el bucle nunca muera mientras la app esté abierta
             handler.postDelayed(this, 500);
         }
     };
 
+
+    /*
     private ServiceConnection conn = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
@@ -89,11 +101,30 @@ public class NowPlayingActivity extends AppCompatActivity {
             musicService = null;
         }
     };
+     */
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // En onCreate de NowPlayingActivity
+
+        ImageButton btnOpenPlaylist = findViewById(R.id.btnOpenPlaylist);
+        ImageButton btnGoToPlayer = findViewById(R.id.btnGoToPlayer);
+
+        // Ir a Playlist
+        btnOpenPlaylist.setOnClickListener(v -> {
+            Intent intent = new Intent(this, PlaylistActivity.class); // O como se llame tu activity de lista
+            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT); // <--- TRUCO DE MAGIA
+            startActivity(intent);
+        });
+
+        // Ir al Reproductor (Ya estamos aquí, así que no hace nada o muestra un mensajito)
+        btnGoToPlayer.setOnClickListener(v -> {
+            // Opcional: Toast.makeText(this, "Ya estás en el reproductor", Toast.LENGTH_SHORT).show();
+        });
+
 
         tvTitle = findViewById(R.id.tvTitle);
         tvArtist = findViewById(R.id.tvArtist);
@@ -107,16 +138,21 @@ public class NowPlayingActivity extends AppCompatActivity {
         ivCover = findViewById(R.id.ivCover);
 
         btnPlay.setOnClickListener(v -> {
-            if (bound && musicService != null) {
+            // CORRECCIÓN: Ignoramos 'bound' o 'isBound' y preguntamos directo al objeto
+            if (musicService != null) {
                 if (musicService.isPlaying()) {
                     musicService.pause();
+                    // Actualizamos icono inmediatamente para feedback visual rápido
                     btnPlay.setImageResource(android.R.drawable.ic_media_play);
                 } else {
                     musicService.play();
                     btnPlay.setImageResource(android.R.drawable.ic_media_pause);
                 }
+                // Sincronizamos el resto de la UI
+                refreshMetadata();
             }
         });
+
 
         btnPrev.setOnClickListener(v -> {
             if (bound && musicService != null) {
@@ -162,12 +198,19 @@ public class NowPlayingActivity extends AppCompatActivity {
         }
     }
 
+    // Así debe quedar startAndBindService
     private void startAndBindService() {
         Intent svc = new Intent(this, MusicService.class);
-        startService(svc);
-        bindService(new Intent(this, MusicService.class), conn, Context.BIND_AUTO_CREATE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(svc);
+        } else {
+            startService(svc);
+        }
+        // CAMBIO AQUÍ: Usamos 'serviceConnection' (la variable del final)
+        bindService(new Intent(this, MusicService.class), serviceConnection, Context.BIND_AUTO_CREATE);
         handler.post(updateRunnable);
     }
+
 
     /**
      * Si el servicio ya está conectado, le pasamos la lista encontrada y reproducimos la primera pista.
@@ -247,22 +290,73 @@ public class NowPlayingActivity extends AppCompatActivity {
     }
 
     private void refreshMetadata() {
-        if (!bound || musicService == null) return;
-        int idx = musicService.getCurrentIndex();
+        if (musicService == null) return;
+
         List<Track> q = musicService.getQueue();
-        if (q == null || q.isEmpty() || idx < 0 || idx >= q.size()) return;
+        int idx = musicService.getCurrentIndex();
+
+        if (q == null || q.isEmpty()) return;
+        if (idx < 0 || idx >= q.size()) idx = 0;
+
         Track t = q.get(idx);
 
-        tvTitle.setText(t.title != null ? t.title : "Desconocido");
-        tvArtist.setText(t.artist != null ? t.artist : "");
-        tvAlbum.setText(t.album != null ? t.album : "");
+        runOnUiThread(() -> {
+            // 1. Textos
+            tvTitle.setText(t.title != null ? t.title : "Desconocido");
+            tvArtist.setText(t.artist != null ? t.artist : "Artista Desconocido");
+            if (tvAlbum != null) tvAlbum.setText(t.album != null ? t.album : "");
 
-        long dur = t.durationMs > 0 ? t.durationMs : musicService.getDuration();
-        updateSeekUi(musicService.getPosition(), dur);
-        if (dur > Integer.MAX_VALUE) dur = Integer.MAX_VALUE;
-        seekBar.setMax((int) dur);
-        btnPlay.setImageResource(musicService.isPlaying() ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
+            // 2. Seekbar y Tiempos
+            long dur = t.durationMs > 0 ? t.durationMs : musicService.getDuration();
+            long pos = musicService.getPosition();
+            if (dur > 0) {
+                seekBar.setMax((int) dur);
+                seekBar.setProgress((int) pos);
+                tvTimeTotal.setText(formatTime(dur)); // Asegúrate de actualizar el texto total
+            }
+            tvTimeCur.setText(formatTime(pos));
+
+            // 3. Botón Play/Pause
+            if (btnPlay != null) {
+                btnPlay.setImageResource(musicService.isPlaying() ?
+                        android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
+            }
+
+            // 4. --- CARGA DE PORTADA (NUEVO) ---
+            // Usamos un hilo de fondo rápido para no congelar la UI decodificando la imagen
+            new Thread(() -> {
+                android.graphics.Bitmap artBitmap = null;
+                try {
+                    android.media.MediaMetadataRetriever mmr = new android.media.MediaMetadataRetriever();
+                    // Importante: Usar el URI parseado
+                    mmr.setDataSource(this, Uri.parse(t.path));
+
+                    byte[] artBytes = mmr.getEmbeddedPicture();
+                    if (artBytes != null) {
+                        artBitmap = android.graphics.BitmapFactory.decodeByteArray(artBytes, 0, artBytes.length);
+                    }
+                    mmr.release();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                // Volvemos al hilo principal para pintar la imagen
+                android.graphics.Bitmap finalArt = artBitmap;
+                runOnUiThread(() -> {
+                    if (ivCover != null) {
+                        if (finalArt != null) {
+                            ivCover.setImageBitmap(finalArt);
+                        } else {
+                            // Si no tiene portada, pon una imagen por defecto (ej. el logo de android)
+                            ivCover.setImageResource(android.R.drawable.ic_menu_gallery);
+                        }
+                    }
+                });
+            }).start();
+            // -----------------------------------
+        });
     }
+
 
     private void updateSeekUi(long pos, long dur) {
         tvTimeCur.setText(formatTime(pos));
@@ -283,7 +377,7 @@ public class NowPlayingActivity extends AppCompatActivity {
         handler.removeCallbacks(updateRunnable);
         try { unregisterReceiver(serviceReceiver); } catch (Exception ignored) {}
         if (bound) {
-            unbindService(conn);
+            unbindService(serviceConnection);
             bound = false;
         }
     }
@@ -316,6 +410,16 @@ public class NowPlayingActivity extends AppCompatActivity {
                 Log.d("DEBUG_APP", "Procesando lista pendiente de " + pendingTracks.size() + " canciones.");
                 musicService.setQueue(pendingTracks);
                 musicService.playTrack(0);
+
+                // --- AGREGA ESTAS LÍNEAS NUEVAS ---
+                // 1. Forzamos a la UI a leer los datos de la canción actual (Título, Autor, etc.)
+                refreshMetadata();
+
+                // 2. Aseguramos que el actualizador de la barra de progreso empiece a correr
+                handler.removeCallbacks(updateRunnable);
+                handler.post(updateRunnable);
+                // ----------------------------------
+
                 pendingTracks = null; // Limpiamos la lista de espera
             }
         }
@@ -340,11 +444,19 @@ public class NowPlayingActivity extends AppCompatActivity {
             startService(intent);
         }
         bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+
+        // AGREGAR ESTO: Iniciar el reloj
+        handler.removeCallbacks(updateRunnable); // Por seguridad para no duplicar
+        handler.post(updateRunnable);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+
+        // AGREGAR ESTO: Detener el reloj para ahorrar batería
+        handler.removeCallbacks(updateRunnable);
+
         if (isBound) {
             unbindService(serviceConnection);
             isBound = false;

@@ -43,6 +43,25 @@ public class PlaylistActivity extends AppCompatActivity implements MusicAdapter.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_playlist);
 
+        // En onCreate de PlaylistActivity
+
+        ImageButton btnOpenPlaylist = findViewById(R.id.btnOpenPlaylist);
+        ImageButton btnGoToPlayer = findViewById(R.id.btnGoToPlayer);
+
+        // Ir a Playlist (Ya estamos aquí)
+        btnOpenPlaylist.setOnClickListener(v -> {
+            // No hace nada
+        });
+
+        // VOLVER AL REPRODUCTOR
+        btnGoToPlayer.setOnClickListener(v -> {
+            Intent intent = new Intent(this, NowPlayingActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT); // <--- IMPORTANTE
+            startActivity(intent);
+            // No usamos finish() para mantener el estado de ambas pantallas
+        });
+
+
         rv = findViewById(R.id.rvTracks);
         btnShuffle = findViewById(R.id.btnShuffle);
         btnRepeat = findViewById(R.id.btnRepeat);

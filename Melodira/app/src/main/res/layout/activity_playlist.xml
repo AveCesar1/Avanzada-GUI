@@ -38,4 +38,41 @@
     <View android:id="@+id/dock" android:layout_width="0dp" android:layout_height="56dp" android:background="#F7F7F7"
         app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
 
+
+    <!-- PEGAR ESTO EN activity_playlist.xml AL FINAL -->
+
+    <!-- Dock divisor -->
+    <View
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="#DDDDDD"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="64dp" />
+    <!-- Nota: Ajusta el marginBottom si choca con tu lista -->
+
+    <!-- Botón Playlist (Aquí visualmente menos destacado o igual) -->
+    <ImageButton
+        android:id="@+id/btnOpenPlaylist"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:src="@android:drawable/ic_menu_sort_by_size"
+        android:background="@android:drawable/btn_default"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_margin="8dp"/>
+
+    <!-- Botón Reproductor (Para volver) -->
+    <ImageButton
+        android:id="@+id/btnGoToPlayer"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@android:drawable/ic_media_play"
+        android:background="?android:selectableItemBackgroundBorderless"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="8dp"/>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

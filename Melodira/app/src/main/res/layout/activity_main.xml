@@ -16,15 +16,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"/>
 
-    <ImageButton
-        android:id="@+id/btnMenuTop"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:src="@android:drawable/ic_menu_more"
-        android:background="?android:selectableItemBackgroundBorderless"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
     <!-- Cover -->
     <ImageView
         android:id="@+id/ivCover"
@@ -77,17 +68,23 @@
             android:src="@android:drawable/ic_media_next" android:background="?android:selectableItemBackgroundBorderless"/>
     </LinearLayout>
 
-    <!-- Dock -->
+    <!-- ... resto del código arriba ... -->
+
+    <!-- Dock (Barra inferior) -->
     <View android:layout_width="0dp" android:layout_height="1dp" android:background="#DDDDDD"
         app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
 
+    <!-- Botón para ir a la Playlist -->
     <ImageButton android:id="@+id/btnOpenPlaylist" android:layout_width="48dp" android:layout_height="48dp"
         android:src="@android:drawable/ic_menu_sort_by_size" android:background="?android:selectableItemBackgroundBorderless"
         app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" android:layout_margin="8dp"/>
 
-    <ImageButton android:id="@+id/btnQuickPlay" android:layout_width="56dp" android:layout_height="56dp"
+    <!-- Botón para ir al Reproductor (CAMBIADO DE NOMBRE) -->
+    <!-- Le cambié el ID a btnGoToPlayer -->
+    <ImageButton android:id="@+id/btnGoToPlayer" android:layout_width="56dp" android:layout_height="56dp"
         android:src="@android:drawable/ic_media_play"
-        android:background="@android:drawable/btn_default" app:layout_constraintBottom_toBottomOf="parent"
+        android:background="@android:drawable/btn_default"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" android:layout_margin="8dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.DocumentsContract;
@@ -137,27 +138,49 @@ public class MusicScanner {
 
     public static List<Track> scanDocumentTree(Context context, Uri treeUri) {
         List<Track> tracks = new ArrayList<>();
-
-        // 1. Usar DocumentFile para manejar el Uri del árbol
         DocumentFile dir = DocumentFile.fromTreeUri(context, treeUri);
 
         if (dir != null && dir.isDirectory()) {
-            // 2. Iterar sobre los archivos
             for (DocumentFile file : dir.listFiles()) {
-                if (file.isFile()) {
-                    String name = file.getName();
-                    // 3. Filtro simple por extensión
-                    if (name != null && name.toLowerCase().endsWith(".mp3")) {
+                if (file.isFile() && file.getName() != null && file.getName().toLowerCase().endsWith(".mp3")) {
 
-                        // IMPORTANTE: Crear el Track usando el URI del archivo, no un path
-                        Track t = new Track();
-                        t.title = name.replace(".mp3", ""); // Nombre temporal
-                        t.artist = "Desconocido";
-                        t.path = file.getUri().toString(); // <--- CLAVE: Guardar URI como String
-                        t.durationMs = 0; // Se actualizará al reproducir si tu servicio lo maneja
+                    Track t = new Track();
+                    t.path = file.getUri().toString(); // URI vital para reproducir
 
-                        tracks.add(t);
+                    // --- NUEVA LÓGICA PARA LEER METADATOS REALES ---
+                    MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+                    try {
+                        mmr.setDataSource(context, file.getUri());
+
+                        // Intentamos leer los tags internos del MP3
+                        String metaTitle = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+                        String metaArtist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+                        String metaAlbum = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
+                        String metaDuration = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+
+                        // Si hay título real úsalo, si no, usa el nombre del archivo
+                        t.title = (metaTitle != null && !metaTitle.isEmpty()) ? metaTitle : file.getName().replace(".mp3", "");
+                        t.artist = (metaArtist != null && !metaArtist.isEmpty()) ? metaArtist : "Desconocido";
+                        t.album = (metaAlbum != null) ? metaAlbum : "";
+
+                        if (metaDuration != null) {
+                            t.durationMs = Long.parseLong(metaDuration);
+                        }
+
+                        // (Opcional) Aquí podrías leer la imagen (Cover Art)
+                        // byte[] art = mmr.getEmbeddedPicture();
+                        // t.bitmap = BitmapFactory.decodeByteArray(art, 0, art.length);
+
+                    } catch (Exception e) {
+                        // Si falla leer tags, usamos valores por defecto
+                        t.title = file.getName().replace(".mp3", "");
+                        t.artist = "Error al leer tags";
+                    } finally {
+                        try { mmr.release(); } catch (Exception ignored) {}
                     }
+                    // ------------------------------------------------
+
+                    tracks.add(t);
                 }
             }
         }
