@@ -4,87 +4,223 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:background="@color/bone_white">
+    <!-- NOTA: Quité el padding="24dp" de aquí para que el dock llegue a los bordes -->
 
-    <!-- Top bar -->
+    <!-- Top bar: CORAZÓN -->
+    <!-- Añadí margen manual porque quitamos el padding global -->
     <ImageButton
         android:id="@+id/btnFavTop"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:src="@android:drawable/btn_star"
-        android:background="?android:selectableItemBackgroundBorderless"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_heart_minimal"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        app:tint="@color/pure_black"
+        android:layout_marginTop="24dp"
+        android:layout_marginStart="24dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"/>
 
-    <!-- Cover -->
-    <ImageView
-        android:id="@+id/ivCover"
+    <!-- Carátula del Álbum (MÁS PEQUEÑA: 35% de la pantalla) -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cvCoverContainer"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:adjustViewBounds="true"
-        android:scaleType="centerCrop"
-        android:src="@android:drawable/ic_media_play"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="@color/bone_white"
         app:layout_constraintTop_toBottomOf="@+id/btnFavTop"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintDimensionRatio="1:1"
-        app:layout_constraintHeight_percent="0.45"/>
+        app:layout_constraintHeight_percent="0.40"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="16dp">
 
-    <!-- Metadata -->
-    <TextView android:id="@+id/tvTitle" android:layout_width="0dp" android:layout_height="wrap_content"
-        android:text="Título" android:textSize="18sp" app:layout_constraintTop_toBottomOf="@id/ivCover"
-        app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent" android:paddingTop="8dp"/>
+        <ImageView
+            android:id="@+id/ivCover"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="80dp"
+            android:src="@drawable/ic_note_minimal" />
+        <!-- Recuerda que en Java cambiamos scaleType y padding si hay foto real -->
+    </androidx.cardview.widget.CardView>
 
-    <TextView android:id="@+id/tvArtist" android:layout_width="0dp" android:layout_height="wrap_content"
-        android:text="Artista" android:textStyle="bold" app:layout_constraintTop_toBottomOf="@id/tvTitle"
-        app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
 
-    <TextView android:id="@+id/tvAlbum" android:layout_width="0dp" android:layout_height="wrap_content"
-        android:text="Álbum" android:textStyle="italic" app:layout_constraintTop_toBottomOf="@id/tvArtist"
-        app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
+    <!-- Metadata (Separada de la imagen) -->
+    <LinearLayout
+        android:id="@+id/metaContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/cvCoverContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="24dp"
+        android:layout_marginHorizontal="24dp">
 
-    <!-- Progress -->
-    <TextView android:id="@+id/tvTimeCur" android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="0:00" app:layout_constraintTop_toBottomOf="@id/tvAlbum" app:layout_constraintStart_toStartOf="parent" android:paddingTop="8dp"/>
-    <TextView android:id="@+id/tvTimeTotal" android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:text="0:00" app:layout_constraintTop_toBottomOf="@id/tvAlbum" app:layout_constraintEnd_toEndOf="parent" android:paddingTop="8dp"/>
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Canción"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/pure_black"
+            android:gravity="center"
+            android:ellipsize="end"
+            android:maxLines="1"/>
 
-    <SeekBar android:id="@+id/seekBar" android:layout_width="0dp" android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/tvAlbum" app:layout_constraintStart_toEndOf="@id/tvTimeCur"
-        app:layout_constraintEnd_toStartOf="@id/tvTimeTotal" android:paddingLeft="8dp" android:paddingRight="8dp"/>
+        <TextView
+            android:id="@+id/tvArtist"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Artista"
+            android:textSize="16sp"
+            android:textColor="@color/pure_black"
+            android:alpha="0.7"
+            android:gravity="center"
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:maxLines="1"/>
 
-    <!-- Controls -->
-    <LinearLayout android:id="@+id/controls" android:layout_width="0dp" android:layout_height="wrap_content"
-        android:orientation="horizontal" android:gravity="center" app:layout_constraintTop_toBottomOf="@id/seekBar"
-        app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent" android:paddingTop="12dp">
-
-        <ImageButton android:id="@+id/btnPrev" android:layout_width="48dp" android:layout_height="48dp"
-            android:src="@android:drawable/ic_media_previous" android:background="?android:selectableItemBackgroundBorderless"/>
-
-        <ImageButton android:id="@+id/btnPlay" android:layout_width="72dp" android:layout_height="72dp"
-            android:src="@android:drawable/ic_media_pause" android:background="@android:drawable/btn_default_small"/>
-
-        <ImageButton android:id="@+id/btnNext" android:layout_width="48dp" android:layout_height="48dp"
-            android:src="@android:drawable/ic_media_next" android:background="?android:selectableItemBackgroundBorderless"/>
+        <TextView
+            android:id="@+id/tvAlbum"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Álbum"
+            android:textSize="14sp"
+            android:textColor="@color/gray_hint"
+            android:gravity="center"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="1"/>
     </LinearLayout>
 
-    <!-- ... resto del código arriba ... -->
 
-    <!-- Dock (Barra inferior) -->
-    <View android:layout_width="0dp" android:layout_height="1dp" android:background="#DDDDDD"
-        app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
+    <!-- Barra de Progreso (Separada de los metadatos) -->
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:progressTint="@color/pure_black"
+        android:thumbTint="@color/pure_black"
+        android:progressBackgroundTint="@color/gray_hint"
+        app:layout_constraintTop_toBottomOf="@id/metaContainer"
+        app:layout_constraintBottom_toTopOf="@+id/controls"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="25dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginHorizontal="24dp"/>
 
-    <!-- Botón para ir a la Playlist -->
-    <ImageButton android:id="@+id/btnOpenPlaylist" android:layout_width="48dp" android:layout_height="48dp"
-        android:src="@android:drawable/ic_menu_sort_by_size" android:background="?android:selectableItemBackgroundBorderless"
-        app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" android:layout_margin="8dp"/>
+    <TextView
+        android:id="@+id/tvTimeCur"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0:00"
+        android:textColor="@color/pure_black"
+        android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="@id/seekBar"
+        app:layout_constraintTop_toBottomOf="@id/seekBar"/>
 
-    <!-- Botón para ir al Reproductor (CAMBIADO DE NOMBRE) -->
-    <!-- Le cambié el ID a btnGoToPlayer -->
-    <ImageButton android:id="@+id/btnGoToPlayer" android:layout_width="56dp" android:layout_height="56dp"
-        android:src="@android:drawable/ic_media_play"
-        android:background="@android:drawable/btn_default"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" android:layout_margin="8dp"/>
+    <TextView
+        android:id="@+id/tvTimeTotal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0:00"
+        android:textColor="@color/pure_black"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="@id/seekBar"
+        app:layout_constraintTop_toBottomOf="@id/seekBar"/>
+
+    <!-- Controles Principales -->
+    <LinearLayout
+        android:id="@+id/controls"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        app:layout_constraintBottom_toTopOf="@+id/divider"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginBottom="32dp">
+
+        <ImageButton
+            android:id="@+id/btnPrev"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_prev_minimal"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:scaleType="centerInside"
+            android:padding="16dp"/>
+
+        <ImageButton
+            android:id="@+id/btnPlay"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_play_minimal"
+            android:background="@color/bone_white"
+            android:scaleType="centerInside"
+            android:padding="0dp"
+            android:layout_marginHorizontal="24dp"/>
+
+        <ImageButton
+            android:id="@+id/btnNext"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_next_minimal"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:scaleType="centerInside"
+            android:padding="16dp"/>
+    </LinearLayout>
+
+    <!-- DOCK IGUAL AL DE PLAYLIST -->
+    <!-- Línea Divisoria (De lado a lado) -->
+    <View
+        android:id="@+id/divider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="#E0E0E0"
+        app:layout_constraintBottom_toTopOf="@+id/bottomNav"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- Navegación Inferior (Dock de lado a lado) -->
+    <LinearLayout
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2"
+        android:paddingBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <!-- Botón Playlist (Inactivo - Gris) -->
+        <ImageButton
+            android:id="@+id/btnOpenPlaylist"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:src="@drawable/ic_playlist_minimal"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="@color/gray_hint"
+            android:scaleType="centerInside"/>
+
+        <!-- Botón Player (Activo - Negro) -->
+        <ImageButton
+            android:id="@+id/btnGoToPlayer"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:src="@drawable/ic_play_minimal"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            app:tint="@color/pure_black"
+            android:scaleType="centerInside"/>
+    </LinearLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

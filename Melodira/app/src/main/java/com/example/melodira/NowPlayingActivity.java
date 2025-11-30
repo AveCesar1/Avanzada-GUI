@@ -19,6 +19,9 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.os.Environment;
+import android.provider.Settings;
+import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -33,6 +36,7 @@ public class NowPlayingActivity extends AppCompatActivity {
 
     private static final int REQ_READ = 1001;
     private static final int REQ_OPEN_TREE = 2001;
+    private static final int REQ_ALL_FILES_ACCESS = 101;
 
     private MusicService musicService;
     private boolean isBound = false;
@@ -45,6 +49,7 @@ public class NowPlayingActivity extends AppCompatActivity {
     private ImageButton btnPlay, btnPrev, btnNext;
     private ImageView ivCover;
 
+    private boolean fromUser = false;
 
     private BroadcastReceiver serviceReceiver = new BroadcastReceiver() {
         @Override
@@ -110,8 +115,49 @@ public class NowPlayingActivity extends AppCompatActivity {
 
         // En onCreate de NowPlayingActivity
 
+        ImageButton btnPrev = findViewById(R.id.btnPrev);
+        ImageButton btnNext = findViewById(R.id.btnNext);
+
+        // BOTÓN SIGUIENTE
+        btnNext.setOnClickListener(v -> {
+            if (musicService != null) {
+                List<Track> queue = musicService.getQueue();
+                if (queue != null && !queue.isEmpty()) {
+                    int nextIndex = musicService.getCurrentIndex() + 1;
+
+                    // Si llegamos al final, volvemos al principio (0)
+                    if (nextIndex >= queue.size()) {
+                        nextIndex = 0;
+                    }
+
+                    musicService.playTrack(nextIndex);
+                    refreshMetadata(); // Actualizamos la pantalla de inmediato
+                }
+            }
+        });
+
+        // BOTÓN ANTERIOR
+        btnPrev.setOnClickListener(v -> {
+            if (musicService != null) {
+                List<Track> queue = musicService.getQueue();
+                if (queue != null && !queue.isEmpty()) {
+                    int prevIndex = musicService.getCurrentIndex() - 1;
+
+                    // Si estamos en el principio y damos atrás, vamos a la última canción
+                    if (prevIndex < 0) {
+                        prevIndex = queue.size() - 1;
+                    }
+
+                    musicService.playTrack(prevIndex);
+                    refreshMetadata(); // Actualizamos la pantalla de inmediato
+                }
+            }
+        });
+
+
         ImageButton btnOpenPlaylist = findViewById(R.id.btnOpenPlaylist);
         ImageButton btnGoToPlayer = findViewById(R.id.btnGoToPlayer);
+
 
         // Ir a Playlist
         btnOpenPlaylist.setOnClickListener(v -> {
@@ -133,8 +179,6 @@ public class NowPlayingActivity extends AppCompatActivity {
         tvTimeTotal = findViewById(R.id.tvTimeTotal);
         seekBar = findViewById(R.id.seekBar);
         btnPlay = findViewById(R.id.btnPlay);
-        btnPrev = findViewById(R.id.btnPrev);
-        btnNext = findViewById(R.id.btnNext);
         ivCover = findViewById(R.id.ivCover);
 
         btnPlay.setOnClickListener(v -> {
@@ -143,40 +187,42 @@ public class NowPlayingActivity extends AppCompatActivity {
                 if (musicService.isPlaying()) {
                     musicService.pause();
                     // Actualizamos icono inmediatamente para feedback visual rápido
-                    btnPlay.setImageResource(android.R.drawable.ic_media_play);
+                    btnPlay.setImageResource(R.drawable.ic_play_minimal);
                 } else {
                     musicService.play();
-                    btnPlay.setImageResource(android.R.drawable.ic_media_pause);
+                    btnPlay.setImageResource(R.drawable.ic_pause_minimal);
                 }
                 // Sincronizamos el resto de la UI
                 refreshMetadata();
             }
         });
 
-
-        btnPrev.setOnClickListener(v -> {
-            if (bound && musicService != null) {
-                musicService.prev();
-            }
-        });
-
-        btnNext.setOnClickListener(v -> {
-            if (bound && musicService != null) {
-                musicService.next();
-            }
-        });
+        // ... dentro de onCreate, reemplaza el listener del seekBar ...
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            boolean fromUser = false;
-            @Override public void onProgressChanged(SeekBar seekBar, int i, boolean b) {}
-            @Override public void onStartTrackingTouch(SeekBar seekBar) { fromUser = true; }
-            @Override public void onStopTrackingTouch(SeekBar seekBar) {
-                if (bound && musicService != null) {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                // Si el usuario lo está moviendo, actualizamos el texto del tiempo en vivo
+                if (fromUser) {
+                    tvTimeCur.setText(formatTime(progress));
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                fromUser = true; // Pausamos la actualización automática del reloj
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // CORRECCIÓN: Verificamos el objeto musicService directamente
+                if (musicService != null) {
                     musicService.seekTo(seekBar.getProgress());
                 }
-                fromUser = false;
+                fromUser = false; // Reanudamos el reloj automático
             }
         });
+
 
         findViewById(R.id.btnOpenPlaylist).setOnClickListener(v -> startActivity(new Intent(this, PlaylistActivity.class)));
 
@@ -187,15 +233,40 @@ public class NowPlayingActivity extends AppCompatActivity {
         ContextCompat.registerReceiver(this, serviceReceiver, f, ContextCompat.RECEIVER_NOT_EXPORTED);
 
         // START: permission + service binding flow
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        // Chequeo para Android 11 (R) o superior
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // CORRECCIÓN: Usamos android.os.Environment directamente
+            if (android.os.Environment.isExternalStorageManager()) {
+                // ¡Ya tenemos permiso total! Arrancamos.
                 startAndBindService();
             } else {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQ_READ);
+                // No tenemos permiso, enviamos al usuario a la pantalla de configuración especial
+                try {
+                    // CORRECCIÓN: Usamos android.provider.Settings directamente
+                    Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                    intent.addCategory("android.intent.category.DEFAULT");
+                    intent.setData(Uri.parse(String.format("package:%s", getApplicationContext().getPackageName())));
+                    startActivityForResult(intent, REQ_ALL_FILES_ACCESS);
+                    Toast.makeText(this, "Por favor, concede el permiso 'Permitir acceso a todos los archivos' para leer tu música.", Toast.LENGTH_LONG).show();
+                } catch (Exception e) {
+                    Intent intent = new Intent();
+                    intent.setAction(android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                    startActivityForResult(intent, REQ_ALL_FILES_ACCESS);
+                }
             }
         } else {
-            startAndBindService();
+            // Para Android 10 o inferior (Metodo antiguo)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                    startAndBindService();
+                } else {
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQ_READ);
+                }
+            } else {
+                startAndBindService();
+            }
         }
+
     }
 
     // Así debe quedar startAndBindService
@@ -217,22 +288,38 @@ public class NowPlayingActivity extends AppCompatActivity {
      * Si no hay pistas y no hay permisos, lanzamos SAF para que el usuario seleccione la carpeta.
      */
     private void loadTracksAndMaybePlay() {
-        if (!bound || musicService == null) return;
+        Toast.makeText(this, "Escaneando música...", Toast.LENGTH_SHORT).show();
 
-        // 1) intenta scan por MediaStore o SAF guardado
-        List<Track> tracks = MusicScanner.scanDownloadsAndDocuments(this);
+        new Thread(() -> {
+            // 1. Escaneo en segundo plano (rápido)
+            List<Track> tracks = MusicScanner.scanDownloadsAndDocuments(this);
 
-        if (tracks == null || tracks.isEmpty()) {
-            // No encontramos nada. Intentaremos pedir al usuario seleccionar la carpeta (SAF)
-            Toast.makeText(this, "No se encontraron .mp3 automáticamente. Selecciona la carpeta Downloads o Documents para dar acceso.", Toast.LENGTH_LONG).show();
-            launchFolderPicker();
-            return;
-        }
+            runOnUiThread(() -> {
+                if (tracks == null || tracks.isEmpty()) {
+                    Toast.makeText(this, "No se encontraron canciones MP3.", Toast.LENGTH_LONG).show();
+                    return;
+                }
 
-        musicService.setQueue(tracks);
-        musicService.playTrack(0); // reproducirá cuando se prepare y enviará broadcast
-        // no llamar refreshMetadata() aquí: la actualización llegará vía broadcast cuando la pista esté preparada
+                Toast.makeText(this, "¡Encontradas " + tracks.size() + " canciones!", Toast.LENGTH_SHORT).show();
+
+                // 2. INTENTO DE REPRODUCCIÓN
+                if (musicService != null && isBound) {
+                    // Escenario A: El servicio YA está listo -> Reproducimos directo
+                    musicService.setQueue(tracks);
+                    musicService.playTrack(0);
+                } else {
+                    // Escenario B: El servicio NO está listo -> Guardamos en espera
+                    Log.d("DEBUG_APP", "Servicio no listo. Guardando en pendingTracks.");
+                    pendingTracks = tracks;
+
+                    // Nos aseguramos de intentar conectar el servicio
+                    startAndBindService();
+                }
+            });
+        }).start();
     }
+
+
 
     private void launchFolderPicker() {
         try {
@@ -249,6 +336,18 @@ public class NowPlayingActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_ALL_FILES_ACCESS) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                if (Environment.isExternalStorageManager()) {
+                    Toast.makeText(this, "Permiso concedido. Escaneando...", Toast.LENGTH_SHORT).show();
+                    // CAMBIO: Llamamos a la función que hace el escaneo en segundo plano
+                    loadTracksAndMaybePlay();
+                } else {
+                    Toast.makeText(this, "Permiso denegado.", Toast.LENGTH_SHORT).show();
+                }
+            }
+            return;
+        }
         if (requestCode == REQ_OPEN_TREE) {
             if (data != null) {
                 Uri treeUri = data.getData();
@@ -319,7 +418,7 @@ public class NowPlayingActivity extends AppCompatActivity {
             // 3. Botón Play/Pause
             if (btnPlay != null) {
                 btnPlay.setImageResource(musicService.isPlaying() ?
-                        android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play);
+                        R.drawable.ic_pause_minimal : R.drawable.ic_play_minimal);
             }
 
             // 4. --- CARGA DE PORTADA (NUEVO) ---
@@ -342,14 +441,24 @@ public class NowPlayingActivity extends AppCompatActivity {
 
                 // Volvemos al hilo principal para pintar la imagen
                 android.graphics.Bitmap finalArt = artBitmap;
+                // Dentro de refreshMetadata -> runOnUiThread de la imagen...
+
                 runOnUiThread(() -> {
                     if (ivCover != null) {
                         if (finalArt != null) {
+                            // CASO 1: Hay portada real
+                            // Cambiamos a centerCrop para que la foto llene el cuadro
+                            ivCover.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                            ivCover.setPadding(0, 0, 0, 0); // Quitamos el padding
                             ivCover.setImageBitmap(finalArt);
                         } else {
-                            // Si no tiene portada, pon una imagen por defecto (ej. el logo de android)
-                            ivCover.setImageResource(android.R.drawable.ic_menu_gallery);
+                            // CASO 2: No hay portada (Usar Nota Musical)
+                            int padding = (int) (80 * getResources().getDisplayMetrics().density);
+                            ivCover.setPadding(padding, padding, padding, padding);
+
+                            ivCover.setImageResource(R.drawable.ic_note_minimal);
                         }
+
                     }
                 });
             }).start();
@@ -402,35 +511,32 @@ public class NowPlayingActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicService.LocalBinder binder = (MusicService.LocalBinder) service;
             musicService = binder.getService();
-            isBound = true;
-            Log.d("DEBUG_APP", "Servicio conectado correctamente.");
+            isBound = true; // (o 'bound = true' si usas esa variable)
 
-            // AQUÍ ESTÁ LA MAGIA: Si había canciones esperando, las tocamos ahora
+            Log.d("DEBUG_APP", "Servicio conectado. Revisando pendientes...");
+
+            // AQUÍ ESTÁ LA MAGIA:
+            // Si teníamos canciones esperando (porque el permiso se dio apenas), las cargamos ahora.
             if (pendingTracks != null && !pendingTracks.isEmpty()) {
-                Log.d("DEBUG_APP", "Procesando lista pendiente de " + pendingTracks.size() + " canciones.");
+                Log.d("DEBUG_APP", "Cargando " + pendingTracks.size() + " canciones de la lista de espera.");
+
                 musicService.setQueue(pendingTracks);
-                musicService.playTrack(0);
-
-                // --- AGREGA ESTAS LÍNEAS NUEVAS ---
-                // 1. Forzamos a la UI a leer los datos de la canción actual (Título, Autor, etc.)
-                refreshMetadata();
-
-                // 2. Aseguramos que el actualizador de la barra de progreso empiece a correr
-                handler.removeCallbacks(updateRunnable);
-                handler.post(updateRunnable);
-                // ----------------------------------
+                musicService.playTrack(0); // Esto inicia la reproducción automáticamente
 
                 pendingTracks = null; // Limpiamos la lista de espera
             }
+
+            // Actualizamos la pantalla (título, artista, etc.)
+            refreshMetadata();
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
             musicService = null;
             isBound = false;
-            Log.d("DEBUG_APP", "Servicio desconectado.");
         }
     };
+
 
     @Override
     protected void onStart() {

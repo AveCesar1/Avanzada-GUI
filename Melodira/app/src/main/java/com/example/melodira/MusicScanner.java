@@ -26,34 +26,58 @@ public class MusicScanner {
      * Main entry: intenta MediaStore; si no encuentra nada intenta escanear un DocumentFile tree
      * previamente guardado en SharedPreferences (SAF). Devuelve lista (posible vacía).
      */
-    public static List<Track> scanDownloadsAndDocuments(Context ctx) {
-        List<Track> result = new ArrayList<>();
+    public static List<Track> scanDownloadsAndDocuments(Context context) {
+        List<Track> list = new ArrayList<>();
 
-        // 1) Intento MediaStore (rápido + moderno)
-        try {
-            result = scanMediaStoreForMp3(ctx);
-        } catch (Exception e) {
-            Log.w(TAG, "MediaStore scan failed: " + e.getMessage());
-            result = new ArrayList<>();
-        }
+        String[] projection = {
+                MediaStore.Audio.Media.DATA,     // 0. LA RUTA REAL
+                MediaStore.Audio.Media.TITLE,    // 1. EL TÍTULO
+                MediaStore.Audio.Media.ARTIST,
+                MediaStore.Audio.Media.ALBUM,
+                MediaStore.Audio.Media.DURATION
+        };
 
-        // 2) Si MediaStore no arrojó nada, intenta SAF usando treeUri guardado
-        if (result.isEmpty()) {
-            String tree = getSavedTreeUri(ctx);
-            if (!TextUtils.isEmpty(tree)) {
-                try {
-                    Uri treeUri = Uri.parse(tree);
-                    List<Track> safTracks = scanDocumentTree(ctx, treeUri);
-                    if (!safTracks.isEmpty()) {
-                        result = safTracks;
+        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
+        String sortOrder = MediaStore.Audio.Media.TITLE + " ASC";
+
+        try (Cursor cursor = context.getContentResolver().query(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                projection,
+                selection,
+                null,
+                sortOrder
+        )) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int colData = cursor.getColumnIndex(MediaStore.Audio.Media.DATA);
+                int colTitle = cursor.getColumnIndex(MediaStore.Audio.Media.TITLE);
+                int colArtist = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
+                int colAlbum = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
+                int colDur = cursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
+
+                do {
+                    // Obtenemos los datos de la base de datos
+                    String realPath = cursor.getString(colData);   // RUTA (/storage/...)
+                    String realTitle = cursor.getString(colTitle); // TÍTULO (Nombre canción)
+                    String artist = (colArtist != -1) ? cursor.getString(colArtist) : "Desconocido";
+                    String album = (colAlbum != -1) ? cursor.getString(colAlbum) : "Desconocido";
+                    long duration = (colDur != -1) ? cursor.getLong(colDur) : 0;
+
+                    // Filtro de seguridad
+                    if (realPath != null && realPath.endsWith(".mp3")) {
+
+                        // CORRECCIÓN: Aseguramos el orden correcto:
+                        // 1. path, 2. title, 3. artist, 4. album, 5. duration
+                        Track t = new Track(realPath, realTitle, artist, album, duration);
+
+                        list.add(t);
                     }
-                } catch (Exception e) {
-                    Log.w(TAG, "SAF scan failed: " + e.getMessage());
-                }
-            }
-        }
 
-        return result;
+                } while (cursor.moveToNext());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     /**
@@ -144,42 +168,37 @@ public class MusicScanner {
             for (DocumentFile file : dir.listFiles()) {
                 if (file.isFile() && file.getName() != null && file.getName().toLowerCase().endsWith(".mp3")) {
 
-                    Track t = new Track();
-                    t.path = file.getUri().toString(); // URI vital para reproducir
+                    // 1. Preparamos las variables
+                    String path = file.getUri().toString();
+                    String title = file.getName().replace(".mp3", "");
+                    String artist = "Desconocido";
+                    String album = "Desconocido";
+                    long duration = 0;
 
-                    // --- NUEVA LÓGICA PARA LEER METADATOS REALES ---
+                    // 2. Intentamos leer metadatos reales
                     MediaMetadataRetriever mmr = new MediaMetadataRetriever();
                     try {
                         mmr.setDataSource(context, file.getUri());
 
-                        // Intentamos leer los tags internos del MP3
                         String metaTitle = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
                         String metaArtist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
                         String metaAlbum = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
                         String metaDuration = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
 
-                        // Si hay título real úsalo, si no, usa el nombre del archivo
-                        t.title = (metaTitle != null && !metaTitle.isEmpty()) ? metaTitle : file.getName().replace(".mp3", "");
-                        t.artist = (metaArtist != null && !metaArtist.isEmpty()) ? metaArtist : "Desconocido";
-                        t.album = (metaAlbum != null) ? metaAlbum : "";
-
-                        if (metaDuration != null) {
-                            t.durationMs = Long.parseLong(metaDuration);
-                        }
-
-                        // (Opcional) Aquí podrías leer la imagen (Cover Art)
-                        // byte[] art = mmr.getEmbeddedPicture();
-                        // t.bitmap = BitmapFactory.decodeByteArray(art, 0, art.length);
+                        if (metaTitle != null && !metaTitle.isEmpty()) title = metaTitle;
+                        if (metaArtist != null && !metaArtist.isEmpty()) artist = metaArtist;
+                        if (metaAlbum != null) album = metaAlbum;
+                        if (metaDuration != null) duration = Long.parseLong(metaDuration);
 
                     } catch (Exception e) {
-                        // Si falla leer tags, usamos valores por defecto
-                        t.title = file.getName().replace(".mp3", "");
-                        t.artist = "Error al leer tags";
+                        // Si falla, se quedan los valores por defecto definidos arriba
                     } finally {
                         try { mmr.release(); } catch (Exception ignored) {}
                     }
-                    // ------------------------------------------------
 
+                    // 3. AHORA SÍ creamos el Track con todos los datos juntos
+                    // CORRECCIÓN: Usamos el constructor con argumentos
+                    Track t = new Track(path, title, artist, album, duration);
                     tracks.add(t);
                 }
             }
@@ -196,13 +215,14 @@ public class MusicScanner {
         } else if (node.isFile()) {
             String name = node.getName() != null ? node.getName() : "";
             if (name.toLowerCase().endsWith(".mp3")) {
-                // metadata mínima: no tenemos duración sin abrir el file, dejamos ruta uri
-                Track t = new Track();
-                t.title = name;
-                t.artist = "";
-                t.album = "";
-                t.path = node.getUri().toString(); // nota: path aquí es URI SAF, procesa con ContentResolver si quieres reproducir
-                t.durationMs = 0;
+
+                String path = node.getUri().toString();
+                String title = name.replace(".mp3", ""); // Quitamos la extensión para que se vea mejor
+
+                // CORRECCIÓN: Creamos el Track con datos directos
+                // Como este método es simple, no calculamos duración ni artista
+                Track t = new Track(path, title, "Desconocido", "Desconocido", 0);
+
                 out.add(t);
             }
         }
