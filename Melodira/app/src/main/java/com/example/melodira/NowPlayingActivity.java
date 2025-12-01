@@ -88,26 +88,6 @@ public class NowPlayingActivity extends AppCompatActivity {
         }
     };
 
-
-    /*
-    private ServiceConnection conn = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            MusicService.LocalBinder lb = (MusicService.LocalBinder) iBinder;
-            musicService = lb.getService();
-            bound = true;
-            // setQueue and start playback if we already have tracks
-            loadTracksAndMaybePlay();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            bound = false;
-            musicService = null;
-        }
-    };
-     */
-
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -235,19 +215,20 @@ public class NowPlayingActivity extends AppCompatActivity {
         // START: permission + service binding flow
         // Chequeo para Android 11 (R) o superior
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // CORRECCIÓN: Usamos android.os.Environment directamente
             if (android.os.Environment.isExternalStorageManager()) {
-                // ¡Ya tenemos permiso total! Arrancamos.
+                // CASO A: Ya tenemos permiso (segunda vez que abres la app)
+                // 1. Iniciamos el servicio
                 startAndBindService();
+                // 2. ¡ESCANEAMOS LA MÚSICA! (Esto es lo que faltaba)
+                loadTracksAndMaybePlay();
             } else {
-                // No tenemos permiso, enviamos al usuario a la pantalla de configuración especial
+                // CASO B: No tenemos permiso, lo pedimos
                 try {
-                    // CORRECCIÓN: Usamos android.provider.Settings directamente
                     Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
                     intent.addCategory("android.intent.category.DEFAULT");
                     intent.setData(Uri.parse(String.format("package:%s", getApplicationContext().getPackageName())));
                     startActivityForResult(intent, REQ_ALL_FILES_ACCESS);
-                    Toast.makeText(this, "Por favor, concede el permiso 'Permitir acceso a todos los archivos' para leer tu música.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Por favor, concede el permiso para leer tu música.", Toast.LENGTH_LONG).show();
                 } catch (Exception e) {
                     Intent intent = new Intent();
                     intent.setAction(android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
@@ -255,18 +236,21 @@ public class NowPlayingActivity extends AppCompatActivity {
                 }
             }
         } else {
-            // Para Android 10 o inferior (Metodo antiguo)
+            // Para Android 10 o inferior (Método antiguo)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                    // CASO C: Ya tenemos permiso antiguo
                     startAndBindService();
+                    loadTracksAndMaybePlay(); // <--- AGREGAR AQUÍ TAMBIÉN
                 } else {
                     ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQ_READ);
                 }
             } else {
+                // Android muy viejo (siempre tiene permiso)
                 startAndBindService();
+                loadTracksAndMaybePlay(); // <--- AGREGAR AQUÍ TAMBIÉN
             }
         }
-
     }
 
     // Así debe quedar startAndBindService
@@ -304,9 +288,21 @@ public class NowPlayingActivity extends AppCompatActivity {
 
                 // 2. INTENTO DE REPRODUCCIÓN
                 if (musicService != null && isBound) {
-                    // Escenario A: El servicio YA está listo -> Reproducimos directo
-                    musicService.setQueue(tracks);
-                    musicService.playTrack(0);
+                    // Escenario A: El servicio YA está listo
+
+                    // TRUCO DE MAGIA 2.0:
+                    // Solo reiniciamos la lista si NO está sonando nada.
+                    // Así, si cierras y abres la app, no te corta la inspiración.
+                    if (!musicService.isPlaying() && musicService.getQueue().isEmpty()) {
+                        musicService.setQueue(tracks);
+                        musicService.playTrack(0);
+                    } else {
+                        // Opcional: Si ya estaba sonando, quizás solo actualizamos la lista interna
+                        // pero no forzamos el playTrack(0).
+                        // Por ahora, dejémoslo así o forzamos actualización si quieres refrescar archivos nuevos:
+                        musicService.setQueue(tracks);
+                        // musicService.playTrack(0); // <-- Comenta esto si no quieres que se reinicie al abrir
+                    }
                 } else {
                     // Escenario B: El servicio NO está listo -> Guardamos en espera
                     Log.d("DEBUG_APP", "Servicio no listo. Guardando en pendingTracks.");
