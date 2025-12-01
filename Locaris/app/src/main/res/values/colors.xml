@@ -2,4 +2,19 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Tu paleta personalizada -->
+    <color name="bone_white">#F5F5F0</color> <!-- Fondo general -->
+    <color name="pure_black">#121212</color> <!-- Textos principales -->
+    <color name="gray_hint">#888888</color>  <!-- Textos secundarios -->
+    
+    <!-- Colores para burbujas de chat -->
+    <color name="bubble_me">#121212</color>   <!-- Mis mensajes (negro) -->
+    <color name="text_me">#F5F5F0</color>     <!-- Mi texto (hueso) -->
+
+    <color name="bubble_other">#E0E0E0</color> <!-- Mensajes de otro (gris claro) -->
+    <color name="text_other">#121212</color>   <!-- Texto de otro (negro) -->
+    
+    <!-- Color principal de la app (botones, barras) -->
+    <color name="locaris_accent">#121212</color>
 </resources>

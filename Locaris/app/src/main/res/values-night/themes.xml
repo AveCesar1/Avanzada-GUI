@@ -1,7 +1,12 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.Locaris" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+        <!-- Customize your light theme here. -->
+        <!-- 1. Cambiar color de la barra a Blanco Hueso -->
+        <item name="android:statusBarColor">@color/bone_white</item>
+
+        <!-- 2. IMPORTANTE: Hacer que los iconos (hora/batería) sean NEGROS -->
+        <item name="android:windowLightStatusBar">true</item>
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 </resources>

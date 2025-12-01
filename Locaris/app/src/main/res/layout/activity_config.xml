@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bone_white"
+    android:gravity="center"
+    android:padding="32dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="LOCARIS"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:textColor="@color/pure_black"
+        android:layout_marginBottom="48dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="IP del Servidor:"
+        android:textColor="@color/gray_hint"/>
+
+    <EditText
+        android:id="@+id/et_ip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="192.168.1.69"
+        android:textColor="@color/pure_black"
+        android:inputType="textUri"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="(Ejemplo: 192.168.1.100)"
+        android:textSize="12sp"
+        android:textColor="@color/gray_hint"
+        android:layout_marginBottom="24dp"/>
+
+    <Button
+        android:id="@+id/btn_connect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="CONECTAR"
+        android:backgroundTint="@color/pure_black"
+        android:textColor="@color/bone_white"/>
+
+</LinearLayout>
