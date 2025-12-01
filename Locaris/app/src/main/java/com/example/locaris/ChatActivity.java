@@ -21,7 +21,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ChatActivity extends AppCompatActivity {
 
     // ¡¡¡ IMPORTANTE: PON LA MISMA IP QUE EN MAINACTIVITY !!!
-    private static final String BASE_URL = "http://192.168.1.69:3000/";
+    // private static final String BASE_URL = "http://192.168.1.69:3000/";
 
     private EditText etMessage;
     private Button btnSend;
@@ -42,10 +42,25 @@ public class ChatActivity extends AppCompatActivity {
         }
     };
 
+    // BORRA ESTA LINEA SI EXISTE:
+    // private static final String BASE_URL = "http://192.168.1.69:3000/";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+
+        // ... (código de recibir intents) ...
+
+        // --- INICIO CORRECCIÓN IP DINÁMICA ---
+
+        // 1. Recuperar la IP que escribiste en la pantalla de inicio
+        android.content.SharedPreferences prefs = android.preference.PreferenceManager.getDefaultSharedPreferences(this);
+        String savedIp = prefs.getString("server_ip", "192.168.1.69"); // Valor por defecto
+
+        // 2. Construir la URL
+        String dynamicBaseUrl = "http://" + savedIp + ":3000/";
+
 
         // Recibir IDs del MainActivity
         myUuid = getIntent().getStringExtra("MY_UUID");
@@ -62,7 +77,7 @@ public class ChatActivity extends AppCompatActivity {
                 .connectTimeout(5, TimeUnit.SECONDS)
                 .build();
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
+                .baseUrl(dynamicBaseUrl)
                 .client(client)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
