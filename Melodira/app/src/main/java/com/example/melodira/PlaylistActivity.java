@@ -70,39 +70,46 @@ public class PlaylistActivity extends AppCompatActivity implements MusicAdapter.
 
     private void setupList() {
         if (!bound || musicService == null) return;
-        List<Track> q = musicService.getQueue();
 
-        // Crea el adaptador
-        adapter = new MusicAdapter(q, musicService.getCurrentIndex(), this);
+        // CAMBIO: Pide la lista en el orden de reproducción actual.
+        List<Track> orderedQueue = musicService.getPlaybackOrder();
+
+        // El resto sigue igual, pero usando la nueva lista ordenada.
+        adapter = new MusicAdapter(orderedQueue, musicService.getCurrentTrack(), this); // Pasamos el objeto Track
         rv.setAdapter(adapter);
 
-        // Opcional: Si quitaste el drag & drop (ItemTouchHelper) para simplificar,
-        // borra las líneas de ItemTouchHelper. Si lo quieres mantener,
-        // asegúrate de que SimpleItemTouchHelperCallback siga existiendo.
+        // Opcional: Hacer scroll a la canción actual
+        int currentPosInOrderedList = orderedQueue.indexOf(musicService.getCurrentTrack());
+        if(currentPosInOrderedList != -1) {
+            rv.scrollToPosition(currentPosInOrderedList);
+        }
     }
 
     @Override
     public void onItemClicked(int position) {
         if (!bound || musicService == null) return;
 
-        // Reproducir la canción seleccionada
-        musicService.playTrack(position);
+        // 1. Obtiene la canción del playbackOrder según la posición en la que se hizo clic.
+        Track clickedTrack = musicService.getPlaybackOrder().get(position);
 
-        // Actualizar visualmente cuál está seleccionada
-        adapter.setSelected(position);
+        // 2. Encuentra el índice REAL de esa canción en la cola original.
+        int originalIndex = musicService.getQueue().indexOf(clickedTrack);
 
-        // Opcional: Volver al reproductor automáticamente al tocar una canción
-        // Intent intent = new Intent(this, NowPlayingActivity.class);
-        // intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-        // startActivity(intent);
+        // 3. Reproduce usando el índice original.
+        if(originalIndex != -1) {
+            musicService.playTrack(originalIndex);
+        }
+
+        // 4. Actualiza visualmente cuál está seleccionada
+        adapter.setSelected(clickedTrack);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Refrescar la lista al volver (por si cambió la canción en la otra pantalla)
-        if (adapter != null && musicService != null) {
-            adapter.setSelected(musicService.getCurrentIndex());
+        // Re-configura la lista entera por si el orden (shuffle) cambió.
+        if (bound && musicService != null) {
+            setupList();
         }
     }
 

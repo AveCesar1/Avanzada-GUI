@@ -16,6 +16,7 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class MusicService extends Service {
@@ -28,6 +29,9 @@ public class MusicService extends Service {
     private MediaPlayer player;
     private List<Track> playlist = new ArrayList<>();
     private int currentIndex = -1;
+
+    // Lista que representa el orden de reproducción actual (original o aleatorio)
+    private List<Track> playbackOrder;
 
     // Variables para el control de flujo
     private boolean isShuffle = false;
@@ -64,11 +68,14 @@ public class MusicService extends Service {
 
     // --- CONTROL DE REPRODUCCIÓN ---
 
-    public void setQueue(List<Track> tracks) {
-        this.playlist = tracks;
-        // Avisamos a la UI que la lista cambió
-        sendBroadcast(new Intent(ACTION_QUEUE_UPDATED));
+    public void setQueue(List<Track> newQueue) {
+        this.playlist = newQueue;
+        // Inicializa el playbackOrder con el orden natural al establecer la cola.
+        this.playbackOrder = new ArrayList<>(newQueue);
+        // Reinicia el shuffle por defecto.
+        this.isShuffle = false;
     }
+
 
     public List<Track> getQueue() {
         return playlist;
@@ -211,6 +218,25 @@ public class MusicService extends Service {
 
     public boolean toggleShuffle() {
         isShuffle = !isShuffle;
+
+        // Si la cola no existe, no hagas nada
+        if (playlist == null || playlist.isEmpty()) return isShuffle;
+
+        if (isShuffle) {
+            // --- MODO ALEATORIO ACTIVADO ---
+            // 1. Crea una copia de la cola original.
+            playbackOrder = new ArrayList<>(playlist);
+            // 2. Baraja esa copia.
+            Collections.shuffle(playbackOrder);
+        } else {
+            // --- MODO ALEATORIO DESACTIVADO ---
+            // El orden de reproducción vuelve a ser la cola original.
+            playbackOrder = new ArrayList<>(playlist);
+        }
+
+        // Forzar una actualización de la notificación para reflejar el nuevo orden si es necesario
+        updateNotificationState();
+
         return isShuffle;
     }
 
@@ -236,29 +262,55 @@ public class MusicService extends Service {
             return currentIndex; // Devuelve la misma
         }
 
-        // 2. Si es "Aleatorio"
-        if (isShuffle) {
-            // Retorna un número al azar entre 0 y el tamaño de la lista - 1
-            return new java.util.Random().nextInt(playlist.size());
+        // 2. Si es Aleatorio o Normal, ahora ambos usan playbackOrder
+        if (playbackOrder.isEmpty()) return -1;
+
+        // Encuentra la canción actual en el NUEVO orden
+        Track currentTrack = playlist.get(currentIndex);
+        int currentPositionInPlaybackOrder = playbackOrder.indexOf(currentTrack);
+
+        int nextPositionInPlaybackOrder = currentPositionInPlaybackOrder + 1;
+        if (nextPositionInPlaybackOrder >= playbackOrder.size()) {
+            nextPositionInPlaybackOrder = 0; // Bucle
         }
 
-        // 3. Comportamiento Normal (Repetir Playlist)
-        int next = currentIndex + 1;
-        if (next >= playlist.size()) {
-            next = 0; // Volver al inicio (bucle infinito de playlist)
-        }
-        return next;
+        // Obtiene la canción del nuevo orden y busca su índice en la cola ORIGINAL
+        Track nextTrack = playbackOrder.get(nextPositionInPlaybackOrder);
+        return playlist.indexOf(nextTrack);
     }
 
     public int getPrevIndex() {
-        if (playlist == null || playlist.isEmpty()) return -1;
+        // if (playlist == null || playlist.isEmpty()) return -1;
 
-        // Si es aleatorio o repetir uno, al dar "Anterior" solemos querer ir al principio de la canción
-        // o a una anterior lógica, pero simplifiquemos:
-        int prev = currentIndex - 1;
-        if (prev < 0) {
-            prev = playlist.size() - 1;
+        if (playbackOrder.isEmpty()) return -1;
+
+        Track currentTrack = playlist.get(currentIndex);
+        int currentPositionInPlaybackOrder = playbackOrder.indexOf(currentTrack);
+
+        int prevPositionInPlaybackOrder = currentPositionInPlaybackOrder - 1;
+        if (prevPositionInPlaybackOrder < 0) {
+            prevPositionInPlaybackOrder = playbackOrder.size() - 1; // Bucle
         }
-        return prev;
+
+        Track prevTrack = playbackOrder.get(prevPositionInPlaybackOrder);
+        return playlist.indexOf(prevTrack);
     }
+
+    // Metodo para que la UI pida la lista en el orden correcto
+    public List<Track> getPlaybackOrder() {
+        // Si nunca se ha inicializado, devuelve la cola original para evitar errores.
+        if (playbackOrder == null) {
+            return playlist;
+        }
+        return playbackOrder;
+    }
+
+    // Metodo necesario para que la Playlist sepa qué canción resaltar
+    public Track getCurrentTrack() {
+        if (playlist != null && currentIndex >= 0 && currentIndex < playlist.size()) {
+            return playlist.get(currentIndex);
+        }
+        return null;
+    }
+
 }
