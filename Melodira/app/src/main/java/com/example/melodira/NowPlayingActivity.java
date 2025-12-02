@@ -46,7 +46,7 @@ public class NowPlayingActivity extends AppCompatActivity {
 
     private TextView tvTitle, tvArtist, tvAlbum, tvTimeCur, tvTimeTotal;
     private SeekBar seekBar;
-    private ImageButton btnPlay, btnPrev, btnNext;
+    private ImageButton btnPlay, btnPrev, btnNext, btnShuffle, btnRepeat, btnRewind10, btnForward10;
     private ImageView ivCover;
 
     private boolean fromUser = false;
@@ -174,6 +174,75 @@ public class NowPlayingActivity extends AppCompatActivity {
                 }
                 // Sincronizamos el resto de la UI
                 refreshMetadata();
+            }
+        });
+
+        // --- NUEVOS CONTROLES ---
+        btnShuffle = findViewById(R.id.btnShuffle);
+        btnRepeat = findViewById(R.id.btnRepeat);
+        btnRewind10 = findViewById(R.id.btnRewind10);
+        btnForward10 = findViewById(R.id.btnForward10);
+
+        // 1. BOTÓN ALEATORIO (Shuffle)
+        btnShuffle.setOnClickListener(v -> {
+            if (musicService != null) {
+                boolean isShuffle = musicService.toggleShuffle();
+                updateShuffleUi(isShuffle);
+                Toast.makeText(this, isShuffle ? "Aleatorio activado" : "Aleatorio desactivado", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // 2. BOTÓN REPETIR (Playlist vs One)
+        btnRepeat.setOnClickListener(v -> {
+            if (musicService != null) {
+                boolean isRepeatOne = musicService.toggleRepeat();
+                updateRepeatUi(isRepeatOne);
+                Toast.makeText(this, isRepeatOne ? "Repetir canción" : "Repetir playlist", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // 3. ADELANTAR 10s
+        btnForward10.setOnClickListener(v -> {
+            if (musicService != null && musicService.isPlaying()) {
+                long current = musicService.getPosition();
+                long duration = musicService.getDuration();
+                long newPos = current + 10000; // +10 segundos
+
+                if (newPos > duration) newPos = duration; // No pasarse del final
+                musicService.seekTo((int) newPos);
+            }
+        });
+
+        // 4. RETROCEDER 10s
+        btnRewind10.setOnClickListener(v -> {
+            if (musicService != null) { // No es necesario isPlaying para retroceder
+                long current = musicService.getPosition();
+                long newPos = current - 10000; // -10 segundos
+
+                if (newPos < 0) newPos = 0; // No bajar de 0
+                musicService.seekTo((int) newPos);
+            }
+        });
+
+        // Actualizar lógica de los botones Prev/Next para usar la lógica nueva del servicio
+        // Reemplaza tus listeners actuales de btnNext y btnPrev con esto:
+        btnNext.setOnClickListener(v -> {
+            if (musicService != null) {
+                musicService.playTrack(musicService.getNextIndex());
+                refreshMetadata();
+            }
+        });
+
+        btnPrev.setOnClickListener(v -> {
+            if (musicService != null) {
+                // Lógica estándar: si la canción lleva más de 3 seg, reiniciar canción.
+                // Si lleva menos, ir a la anterior.
+                if (musicService.getPosition() > 3000) {
+                    musicService.seekTo(0);
+                } else {
+                    musicService.playTrack(musicService.getPrevIndex());
+                    refreshMetadata();
+                }
             }
         });
 
@@ -387,6 +456,12 @@ public class NowPlayingActivity extends AppCompatActivity {
     private void refreshMetadata() {
         if (musicService == null) return;
 
+        if (musicService != null) {
+            updateShuffleUi(musicService.isShuffleEnabled());
+            updateRepeatUi(musicService.isRepeatOneEnabled());
+        }
+
+
         List<Track> q = musicService.getQueue();
         int idx = musicService.getCurrentIndex();
 
@@ -562,6 +637,28 @@ public class NowPlayingActivity extends AppCompatActivity {
         if (isBound) {
             unbindService(serviceConnection);
             isBound = false;
+        }
+    }
+
+    private void updateShuffleUi(boolean enable) {
+        if (enable) {
+            btnShuffle.setColorFilter(ContextCompat.getColor(this, R.color.pure_black));
+            btnShuffle.setAlpha(1.0f);
+        } else {
+            btnShuffle.setColorFilter(ContextCompat.getColor(this, R.color.gray_hint)); // O el color gris que tengas
+            btnShuffle.setAlpha(0.5f);
+        }
+    }
+
+    private void updateRepeatUi(boolean isOne) {
+        if (isOne) {
+            // Modo: Repetir UNA canción
+            btnRepeat.setImageResource(R.drawable.ic_repeat_one);
+            btnRepeat.setColorFilter(ContextCompat.getColor(this, R.color.pure_black));
+        } else {
+            // Modo: Repetir Playlist (Default)
+            btnRepeat.setImageResource(R.drawable.ic_repeat);
+            btnRepeat.setColorFilter(ContextCompat.getColor(this, R.color.pure_black));
         }
     }
 }

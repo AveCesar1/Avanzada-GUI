@@ -29,6 +29,10 @@ public class MusicService extends Service {
     private List<Track> playlist = new ArrayList<>();
     private int currentIndex = -1;
 
+    // Variables para el control de flujo
+    private boolean isShuffle = false;
+    private boolean isRepeatOne = false; // false = Playlist, true = Canción
+
     public class LocalBinder extends Binder {
         MusicService getService() { return MusicService.this; }
     }
@@ -39,7 +43,10 @@ public class MusicService extends Service {
         player = new MediaPlayer();
 
         // Configurar listener para cuando termine una canción
-        player.setOnCompletionListener(mp -> next());
+        // CAMBIO: Usamos playTrack con getNextIndex() para respetar el modo aleatorio/repetir
+        player.setOnCompletionListener(mp -> {
+            playTrack(getNextIndex());
+        });
 
         createNotificationChannel();
     }
@@ -198,5 +205,60 @@ public class MusicService extends Service {
             player.release();
             player = null;
         }
+    }
+
+    // --- MÉTODOS DE CONTROL NUEVOS ---
+
+    public boolean toggleShuffle() {
+        isShuffle = !isShuffle;
+        return isShuffle;
+    }
+
+    public boolean isShuffleEnabled() {
+        return isShuffle;
+    }
+
+    public boolean toggleRepeat() {
+        isRepeatOne = !isRepeatOne;
+        return isRepeatOne;
+    }
+
+    public boolean isRepeatOneEnabled() {
+        return isRepeatOne;
+    }
+
+    // Lógica inteligente para obtener la siguiente canción
+    public int getNextIndex() {
+        if (playlist == null || playlist.isEmpty()) return -1;
+
+        // 1. Si es "Repetir Uno"
+        if (isRepeatOne) {
+            return currentIndex; // Devuelve la misma
+        }
+
+        // 2. Si es "Aleatorio"
+        if (isShuffle) {
+            // Retorna un número al azar entre 0 y el tamaño de la lista - 1
+            return new java.util.Random().nextInt(playlist.size());
+        }
+
+        // 3. Comportamiento Normal (Repetir Playlist)
+        int next = currentIndex + 1;
+        if (next >= playlist.size()) {
+            next = 0; // Volver al inicio (bucle infinito de playlist)
+        }
+        return next;
+    }
+
+    public int getPrevIndex() {
+        if (playlist == null || playlist.isEmpty()) return -1;
+
+        // Si es aleatorio o repetir uno, al dar "Anterior" solemos querer ir al principio de la canción
+        // o a una anterior lógica, pero simplifiquemos:
+        int prev = currentIndex - 1;
+        if (prev < 0) {
+            prev = playlist.size() - 1;
+        }
+        return prev;
     }
 }

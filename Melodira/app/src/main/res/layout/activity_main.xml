@@ -216,7 +216,7 @@
             android:layout_width="72dp"
             android:layout_height="72dp"
             android:src="@drawable/ic_play_minimal"
-            android:background="@drawable/bg_circle_play"
+            android:background="@color/bone_white"
             android:elevation="4dp"
             android:scaleType="centerInside"
             android:padding="0dp"
