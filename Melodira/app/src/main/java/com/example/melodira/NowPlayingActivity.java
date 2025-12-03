@@ -473,7 +473,12 @@ public class NowPlayingActivity extends AppCompatActivity {
         runOnUiThread(() -> {
             // 1. Textos
             tvTitle.setText(t.title != null ? t.title : "Desconocido");
+            // Esto le dice a Android: "Oye, este texto es importante, muévelo".
+            tvTitle.setSelected(true);
+
             tvArtist.setText(t.artist != null ? t.artist : "Artista Desconocido");
+            // Si quieres que el artista también se mueva:
+            tvArtist.setSelected(true);
             if (tvAlbum != null) tvAlbum.setText(t.album != null ? t.album : "");
 
             // 2. Seekbar y Tiempos

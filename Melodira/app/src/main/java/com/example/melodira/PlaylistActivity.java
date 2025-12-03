@@ -296,24 +296,24 @@ public class PlaylistActivity extends AppCompatActivity implements MusicAdapter.
     public void onItemClicked(int position) {
         if (!bound || musicService == null) return;
 
-        // Obtenemos la canción desde el ADAPTADOR (que puede tener la lista filtrada)
-        // Necesitas añadir un metodo 'getItem(position)' en tu MusicAdapter si no lo tienes,
-        // O hacer pública la lista 'items' del adaptador, o simplemente:
-        // Track clickedTrack = filteredList.get(position); <--- Pero filteredList es local.
-
-        // MEJOR OPCIÓN: Pedirle al adaptador la canción en esa posición visual
-        // Asegúrate de tener un metodo en MusicAdapter: public Track getItem(int pos) { return items.get(pos); }
-        // Si no, usa la lista actual del adaptador si la hiciste pública.
-
-        // Asumiendo que añades getItem() al adaptador:
+        // Obtenemos la canción correcta (incluso si estamos filtrando)
         Track clickedTrack = adapter.getItem(position);
 
         // Buscamos su índice REAL en la cola de reproducción del servicio
         int originalIndex = musicService.getQueue().indexOf(clickedTrack);
 
         if(originalIndex != -1) {
+            // 1. Ordenamos al servicio que toque la música
             musicService.playTrack(originalIndex);
+
+            // 2. ¡MAGIA! Nos teletransportamos automáticamente al reproductor
+            Intent intent = new Intent(this, NowPlayingActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT); // Para no crear duplicados
+            startActivity(intent);
         }
+
+        // Esto ya no es estrictamente necesario si nos vamos de la pantalla,
+        // pero está bien dejarlo por si vuelves atrás.
         adapter.setSelected(clickedTrack);
     }
 
