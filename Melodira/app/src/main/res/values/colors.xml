@@ -3,6 +3,7 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="bone_white">#F5F5F0</color> <!-- Blanco hueso suave -->
+    <color name="white_hint">#EEEEEE</color> <!-- Casi blanco -->
     <color name="pure_black">#121212</color> <!-- Negro casi puro (mejor para pantallas) -->
     <color name="gray_hint">#888888</color>  <!-- Para textos secundarios -->
 </resources>

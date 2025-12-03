@@ -211,4 +211,9 @@ public class MusicAdapter extends RecyclerView.Adapter<MusicAdapter.VH> implemen
             ivMiniCover = v.findViewById(R.id.ivMiniCover);
         }
     }
+
+    // En MusicAdapter.java
+    public Track getItem(int position) {
+        return items.get(position);
+    }
 }

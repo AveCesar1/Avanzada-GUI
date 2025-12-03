@@ -5,7 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bone_white">
+    android:background="@color/bone_white"
+    android:focusableInTouchMode="true">
 
     <!-- 1. Encabezado Grande -->
     <TextView
@@ -21,6 +22,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- NUEVO: Botón Lupa (Solo el icono) -->
+    <!-- Alineado a la derecha del título -->
+    <ImageButton
+        android:id="@+id/btnSearchIcon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_search_minimal"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        app:tint="@color/pure_black"
+        android:scaleType="centerInside"
+        android:layout_marginEnd="24dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/tvHeaderTitle"
+        app:layout_constraintTop_toTopOf="@id/tvHeaderTitle" />
+
     <TextView
         android:id="@+id/tvHeaderSubtitle"
         android:layout_width="wrap_content"
@@ -32,24 +48,61 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvHeaderTitle" />
 
+    <!-- Barra de Búsqueda Minimalista (OCULTA POR DEFECTO) -->
+    <!-- visibility="gone" -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/searchContainer"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="#F2F2F2"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/tvHeaderSubtitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <EditText
+            android:id="@+id/etSearch"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:hint="Buscar..."
+            android:textColorHint="@color/gray_hint"
+            android:textColor="@color/pure_black"
+            android:textSize="14sp"
+            android:maxLines="1"
+            android:inputType="text"
+            android:imeOptions="actionDone"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:drawableStart="@drawable/ic_search_minimal"
+            android:drawablePadding="12dp"/>
+
+    </androidx.cardview.widget.CardView>
+
     <!-- 2. Lista de Canciones -->
-    <!-- CAMBIO: Añadido paddingEnd="30dp" para dejar espacio al índice -->
+    <!-- CAMBIO: constraintTop ahora depende de una barrera lógica o del subtítulo -->
+    <!-- Para evitar saltos feos, lo anclamos al barrier o al subtítulo y luego ajustamos en Java cuando se abra el search -->
+    <!-- Por ahora, lo anclamos debajo del subtítulo con un margen que acomode el Search si aparece -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:paddingBottom="80dp"
         android:paddingEnd="30dp"
         android:clipToPadding="false"
-        app:layout_constraintTop_toBottomOf="@id/tvHeaderSubtitle"
+        app:layout_constraintTop_toBottomOf="@id/searchContainer"
         app:layout_constraintBottom_toTopOf="@+id/dividerDock"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         tools:listitem="@layout/item_track"/>
 
-    <!-- NUEVO: Contenedor del Índice Alfabético (A-Z, ★) -->
-    <!-- Se llenará dinámicamente desde Java para ajustar la altura -->
+    <!-- Contenedor del Índice Alfabético -->
     <LinearLayout
         android:id="@+id/indexContainer"
         android:layout_width="24dp"
@@ -57,12 +110,12 @@
         android:orientation="vertical"
         android:gravity="center"
         android:background="@android:color/transparent"
+        android:elevation="20dp"
         app:layout_constraintTop_toTopOf="@id/recyclerView"
         app:layout_constraintBottom_toTopOf="@id/dividerDock"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginEnd="4dp"
         android:layout_marginBottom="8dp">
-        <!-- Aquí Java inyectará las letras TextViews -->
     </LinearLayout>
 
     <!-- 3. Dock Divisor -->

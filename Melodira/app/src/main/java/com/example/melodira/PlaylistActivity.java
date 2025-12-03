@@ -40,6 +40,14 @@ public class PlaylistActivity extends AppCompatActivity implements MusicAdapter.
     private LinearLayout indexContainer;
     private Map<String, Integer> sectionPositions = new HashMap<>();
     private List<String> indexItems; // Lista mixta (String letras + Icono estrella)
+
+    // --- VARIABLES BÚSQUEDA ---
+    private CardView searchContainer;
+    private android.widget.EditText etSearch;
+    private ImageButton btnSearchIcon;
+    private List<Track> originalQueue; // Para guardar la lista completa
+    private boolean isSearchOpen = false;
+
     // ----------------------------------
 
     private ServiceConnection conn = new ServiceConnection() {
@@ -59,6 +67,23 @@ public class PlaylistActivity extends AppCompatActivity implements MusicAdapter.
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_playlist);
+
+        // --- SETUP BÚSQUEDA ---
+        searchContainer = findViewById(R.id.searchContainer);
+        etSearch = findViewById(R.id.etSearch);
+        btnSearchIcon = findViewById(R.id.btnSearchIcon);
+
+        // 1. Abrir/Cerrar buscador al tocar la lupa
+        btnSearchIcon.setOnClickListener(v -> toggleSearch());
+
+        // 2. Filtrar mientras escribes
+        etSearch.addTextChangedListener(new android.text.TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterList(s.toString());
+            }
+            @Override public void afterTextChanged(android.text.Editable s) {}
+        });
 
         // --- NAVEGACIÓN ---
         ImageButton btnOpenPlaylist = findViewById(R.id.btnOpenPlaylist);
@@ -87,16 +112,20 @@ public class PlaylistActivity extends AppCompatActivity implements MusicAdapter.
     private void setupList() {
         if (!bound || musicService == null) return;
 
-        List<Track> orderedQueue = musicService.getPlaybackOrder();
-        adapter = new MusicAdapter(orderedQueue, musicService.getCurrentTrack(), this);
+        // Guardamos la lista original si es la primera vez o si no estamos buscando
+        if (originalQueue == null || !isSearchOpen) {
+            originalQueue = new ArrayList<>(musicService.getPlaybackOrder());
+        }
+
+        // Inicialmente mostramos la lista original
+        adapter = new MusicAdapter(originalQueue, musicService.getCurrentTrack(), this);
         rv.setAdapter(adapter);
 
-        int currentPos = orderedQueue.indexOf(musicService.getCurrentTrack());
+        int currentPos = originalQueue.indexOf(musicService.getCurrentTrack());
         if(currentPos != -1) rv.scrollToPosition(currentPos);
 
-        // 1. Calcular posiciones (Lógica actualizada)
-        calculateSectionPositions(orderedQueue);
-        // 2. Dibujar índice (Con icono XML y #)
+        // Calculamos índice para la lista completa
+        calculateSectionPositions(originalQueue);
         setupIndexUI();
     }
 
@@ -266,8 +295,22 @@ public class PlaylistActivity extends AppCompatActivity implements MusicAdapter.
     @Override
     public void onItemClicked(int position) {
         if (!bound || musicService == null) return;
-        Track clickedTrack = musicService.getPlaybackOrder().get(position);
+
+        // Obtenemos la canción desde el ADAPTADOR (que puede tener la lista filtrada)
+        // Necesitas añadir un metodo 'getItem(position)' en tu MusicAdapter si no lo tienes,
+        // O hacer pública la lista 'items' del adaptador, o simplemente:
+        // Track clickedTrack = filteredList.get(position); <--- Pero filteredList es local.
+
+        // MEJOR OPCIÓN: Pedirle al adaptador la canción en esa posición visual
+        // Asegúrate de tener un metodo en MusicAdapter: public Track getItem(int pos) { return items.get(pos); }
+        // Si no, usa la lista actual del adaptador si la hiciste pública.
+
+        // Asumiendo que añades getItem() al adaptador:
+        Track clickedTrack = adapter.getItem(position);
+
+        // Buscamos su índice REAL en la cola de reproducción del servicio
         int originalIndex = musicService.getQueue().indexOf(clickedTrack);
+
         if(originalIndex != -1) {
             musicService.playTrack(originalIndex);
         }
@@ -288,6 +331,74 @@ public class PlaylistActivity extends AppCompatActivity implements MusicAdapter.
         if (bound) {
             unbindService(conn);
             bound = false;
+        }
+    }
+
+    // --------------------------------------------
+
+    // --- LÓGICA DEL BUSCADOR ---
+
+    private void toggleSearch() {
+        if (isSearchOpen) {
+            // CERRAR: Ocultar barra, limpiar texto y cerrar teclado
+            isSearchOpen = false;
+            searchContainer.setVisibility(View.GONE);
+            etSearch.setText(""); // Esto disparará filterList("") y restaurará la lista
+
+            // Cerrar teclado
+            android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(etSearch.getWindowToken(), 0);
+
+        } else {
+            // ABRIR: Mostrar barra y enfocar
+            isSearchOpen = true;
+            searchContainer.setVisibility(View.VISIBLE); // Aparece la barra
+            searchContainer.setAlpha(0f);
+            searchContainer.animate().alpha(1f).setDuration(200).start(); // Fade in suave
+
+            etSearch.requestFocus();
+
+            // Abrir teclado automáticamente
+            android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.showSoftInput(etSearch, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+        }
+    }
+
+    private void filterList(String query) {
+        if (originalQueue == null) return;
+
+        List<Track> filteredList = new ArrayList<>();
+
+        // Si está vacío, mostramos todo
+        if (query.isEmpty()) {
+            filteredList.addAll(originalQueue);
+        } else {
+            String lowerQuery = query.toLowerCase().trim();
+
+            for (Track track : originalQueue) {
+                // Buscamos en Título, Artista o Álbum
+                boolean matchesTitle = track.title != null && track.title.toLowerCase().contains(lowerQuery);
+                boolean matchesArtist = track.artist != null && track.artist.toLowerCase().contains(lowerQuery);
+                boolean matchesAlbum = track.album != null && track.album.toLowerCase().contains(lowerQuery);
+
+                if (matchesTitle || matchesArtist || matchesAlbum) {
+                    filteredList.add(track);
+                }
+            }
+        }
+
+        // Actualizamos el adaptador con la nueva lista filtrada
+        // NOTA: Pasamos null como currentTrack temporalmente para evitar saltos visuales raros al filtrar
+        adapter = new MusicAdapter(filteredList, musicService.getCurrentTrack(), this);
+        rv.setAdapter(adapter);
+
+        // Opcional: Recalcular el índice lateral para la lista filtrada (o ocultarlo si son pocos items)
+        if (filteredList.size() < 10) {
+            indexContainer.setVisibility(View.GONE); // Ocultar índice si hay pocos resultados
+        } else {
+            indexContainer.setVisibility(View.VISIBLE);
+            calculateSectionPositions(filteredList); // Recalcular índice para lo filtrado
+            setupIndexUI(); // Redibujar letras
         }
     }
 }
