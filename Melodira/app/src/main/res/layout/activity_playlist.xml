@@ -33,18 +33,37 @@
         app:layout_constraintTop_toBottomOf="@id/tvHeaderTitle" />
 
     <!-- 2. Lista de Canciones -->
+    <!-- CAMBIO: Añadido paddingEnd="30dp" para dejar espacio al índice -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="24dp"
         android:paddingBottom="80dp"
+        android:paddingEnd="30dp"
         android:clipToPadding="false"
         app:layout_constraintTop_toBottomOf="@id/tvHeaderSubtitle"
         app:layout_constraintBottom_toTopOf="@+id/dividerDock"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         tools:listitem="@layout/item_track"/>
+
+    <!-- NUEVO: Contenedor del Índice Alfabético (A-Z, ★) -->
+    <!-- Se llenará dinámicamente desde Java para ajustar la altura -->
+    <LinearLayout
+        android:id="@+id/indexContainer"
+        android:layout_width="24dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@android:color/transparent"
+        app:layout_constraintTop_toTopOf="@id/recyclerView"
+        app:layout_constraintBottom_toTopOf="@id/dividerDock"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="4dp"
+        android:layout_marginBottom="8dp">
+        <!-- Aquí Java inyectará las letras TextViews -->
+    </LinearLayout>
 
     <!-- 3. Dock Divisor -->
     <View
@@ -57,7 +76,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginBottom="8dp"/>
 
-    <!-- 4. Navegación Inferior (Consistente con el Player) -->
+    <!-- 4. Navegación Inferior -->
     <LinearLayout
         android:id="@+id/bottomNav"
         android:layout_width="match_parent"
@@ -67,7 +86,6 @@
         android:paddingBottom="8dp"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <!-- Botón Playlist (Activo - Negro) -->
         <ImageButton
             android:id="@+id/btnOpenPlaylist"
             android:layout_width="0dp"
@@ -78,7 +96,6 @@
             app:tint="@color/pure_black"
             android:scaleType="centerInside"/>
 
-        <!-- Botón Player (Inactivo - Gris) -->
         <ImageButton
             android:id="@+id/btnGoToPlayer"
             android:layout_width="0dp"
