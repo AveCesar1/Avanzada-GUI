@@ -280,11 +280,6 @@ public class PlaylistActivity extends AppCompatActivity implements MusicAdapter.
         RecyclerView.LayoutManager layoutManager = rv.getLayoutManager();
 
         if (layoutManager instanceof LinearLayoutManager) {
-            // CHEAT DE DISEÑO:
-            // En lugar de deslizar por 1000 items (que traba el celular),
-            // saltamos directamente a la posición.
-            // El cerebro lo percibe como "instantáneo" y es mucho más eficiente.
-
             ((LinearLayoutManager) layoutManager).scrollToPositionWithOffset(position, 0);
         }
     }
